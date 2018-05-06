@@ -8,5 +8,6 @@ object Main extends StrictLogging {
   def main(args: Array[String]): Unit = {
     logger.info("Starting service snotify...")
     logger.info(s"Using AMQ at ${Config.amqInterface}")
+    logger.info(s"Peers = [${Config.peerIds.mkString(", ")}]")
   }
 }
