@@ -1,5 +1,9 @@
 *.swp
 *.swo
-/target
 *.class
 *.pyc
+
+/target
+/project/target
+/lib_managed
+/project/project
