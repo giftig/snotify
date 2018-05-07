@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  activemq:
-    image: webcenter/activemq:latest
+  rabbitmq:
+    image: rabbitmq:3-management
     ports:
-      - 8161:8161
-      - 61616:61616
+      - 5672:5672
+      - 15672:15672

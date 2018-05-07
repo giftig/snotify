@@ -1,6 +1,6 @@
 lazy val deps = Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.2",
+  "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.18",
   "com.typesafe" % "config" % "1.3.3",
   "com.typesafe.akka" %% "akka-http" % "10.1.1",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
