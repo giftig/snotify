@@ -10,6 +10,8 @@ import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.config.Config
+import com.xantoria.snotify.model.ReceivedNotification
+import com.xantoria.snotify.queue.QueueHandler
 
 object Main extends StrictLogging {
   def main(args: Array[String]): Unit = {
@@ -19,16 +21,12 @@ object Main extends StrictLogging {
     implicit val materialiser = ActorMaterializer()
 
     val queues = new QueueHandler
-    val consumer = queues.consume()
+    val src = queues.source()
 
     // FIXME: temp
-    val testSink = Sink.foreach { s: String => logger.info(s"Received message: $s") }
-    val result = consumer map { _.message.bytes.toString } runWith testSink
-
-    import system.dispatcher
-    result onComplete {
-      case Success(_) => logger.info("Stream completed successfully")
-      case Failure(t: Throwable) => logger.error("Ruh roh", t)
+    val testSink = Sink.foreach {
+      n: ReceivedNotification => logger.info(s"Received message: ${n.notification}")
     }
+    val result = src runWith testSink
   }
 }
