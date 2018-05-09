@@ -1,5 +1,7 @@
 package com.xantoria.snotify.queue
 
+import scala.util.control.NonFatal
+
 import akka.NotUsed
 import akka.stream._
 import akka.stream.scaladsl._
@@ -38,10 +40,18 @@ class QueueHandler extends QueueHandling with StrictLogging {
     )
     raw map {
       msg: CommittableIncomingMessage => {
-        val encoding = Option(msg.message.properties.getContentEncoding) getOrElse "utf-8"
-        val rawData = msg.message.bytes.decodeString(encoding)
-        val n = rawData.parseJson.convertTo[Notification]
-        AMQPNotification(n, msg)
+        try {
+          val encoding = Option(msg.message.properties.getContentEncoding) getOrElse "utf-8"
+          val rawData = msg.message.bytes.decodeString(encoding)
+          val n = rawData.parseJson.convertTo[Notification]
+          AMQPNotification(n, msg)
+        } catch {
+          case NonFatal(t) => {
+            logger.error("Error while deserialising message", t)
+            msg.nack(requeue = false)
+            throw t
+          }
+        }
       }
     }
   }
