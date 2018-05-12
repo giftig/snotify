@@ -4,7 +4,8 @@ lazy val deps = Seq(
   "com.typesafe" % "config" % "1.3.3",
   "com.typesafe.akka" %% "akka-http" % "10.1.1",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
-  "io.spray" %% "spray-json" % "1.3.4"
+  "io.spray" %% "spray-json" % "1.3.4",
+  "joda-time" % "joda-time" % "2.9.9"
 )
 
 lazy val root = (project in file(".")).settings(
@@ -14,5 +15,6 @@ lazy val root = (project in file(".")).settings(
   scalaVersion := "2.12.4",
   mainClass in Compile := Some("com.xantoria.snotify.Main"),
   libraryDependencies ++= deps,
-  retrieveManaged := true
+  retrieveManaged := true,
+  scalacOptions := Seq("-unchecked", "-deprecation")
 )
