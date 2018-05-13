@@ -23,7 +23,7 @@ object JsonProtocol extends DefaultJsonProtocol {
     v match {
       case JsString(s) => {
         maxLength foreach {
-          case len if s.length > len => serializationError(s"Value too long: $errorDesc")
+          len => if (s.length > len) serializationError(s"Value too long: $errorDesc")
         }
         s
       }

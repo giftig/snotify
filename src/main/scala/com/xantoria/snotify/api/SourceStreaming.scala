@@ -15,8 +15,13 @@ trait SourceStreaming extends StrictLogging {
   protected implicit val mat: Materializer
 
   private def notificationSources: Seq[NotificationSource[ReceivedNotification]] = {
-    // FIXME: Load from config by name
-    Seq(new com.xantoria.snotify.queue.QueueHandler)
+    Config.notificationReaders map { c =>
+      val reader = c.newInstance
+      reader match {
+        case r: NotificationSource[ReceivedNotification] => r
+        case _ => throw new IllegalArgumentException(s"Bad notification reader class c.getName")
+      }
+    }
   }
 
   /**

@@ -31,6 +31,10 @@ object Config {
     s"$protocol://$auth$host:$port"
   }
 
+  val notificationReaders: Seq[Class[_]] = cfg.getStringList("readers").asScala map {
+    c => Class.forName(c)
+  }
+
   private val queuePrefix = amq.getString("queue-prefix")
   val inputQueue = s"$queuePrefix-$clientId"
   val peerQueues = peerIds.map { s: String => (s, s"$queuePrefix-$s") }.toMap
