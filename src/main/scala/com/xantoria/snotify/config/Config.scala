@@ -7,6 +7,7 @@ import com.typesafe.config.{Config => TConfig, ConfigFactory}
 object Config {
   private val cfg: TConfig = ConfigFactory.load()
   private val amq: TConfig = cfg.getConfig("amq")
+  private val persist: TConfig = cfg.getConfig("persist")
 
   val clientId = cfg.getString("client-id")
   val peerIds: Set[String] = cfg.getStringList("cluster.peers").asScala.toSet
@@ -34,6 +35,9 @@ object Config {
   val notificationReaders: Seq[Class[_]] = cfg.getStringList("readers").asScala map {
     c => Class.forName(c)
   }
+
+  val persistHandler: Class[_] = Class.forName(persist.getString("class"))
+  val persistThreads: Int = persist.getInt("threads")
 
   private val queuePrefix = amq.getString("queue-prefix")
   val inputQueue = s"$queuePrefix-$clientId"

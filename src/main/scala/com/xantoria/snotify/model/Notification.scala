@@ -14,7 +14,8 @@ case class Notification(
   targets: Seq[String],
   triggerTime: DateTime,
   creationTime: Option[DateTime],
-  source: Option[String]
+  source: Option[String],
+  complete: Boolean
 )
 
 object Notification {

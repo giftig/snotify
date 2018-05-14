@@ -7,4 +7,6 @@ trait ReceivedNotification {
   val notification: Notification
 
   def ack(): Unit
+  def reject(): Unit
+  def retry(): Unit
 }

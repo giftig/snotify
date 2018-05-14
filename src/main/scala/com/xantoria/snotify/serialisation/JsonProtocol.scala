@@ -52,7 +52,8 @@ object JsonProtocol extends DefaultJsonProtocol {
       "creationTime" -> {
         n.creationTime map { t => JsString(t.toString(datePattern)) } getOrElse JsNull
       },
-      "source" -> (n.source map { JsString(_) } getOrElse JsNull)
+      "source" -> (n.source map { JsString(_) } getOrElse JsNull),
+      "complete" -> JsBoolean(n.complete)
     ))
 
     def read(data: JsValue): Notification = {
@@ -87,7 +88,11 @@ object JsonProtocol extends DefaultJsonProtocol {
         },
         source = fields.get("source") map {
           v: JsValue => requireString(v, "notification source", Some(MaxTargetLen))
-        }
+        },
+        complete = fields.get("boolean") map {
+          case JsBoolean(b: Boolean) => b
+          case _ => deserializationError("Wrong type for notification 'complete' field")
+        } getOrElse false
       )
     }
   }
