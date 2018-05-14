@@ -1,5 +1,7 @@
 package com.xantoria.snotify.alert
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import com.xantoria.snotify.model.Notification
 
 /**
@@ -12,5 +14,5 @@ trait AlertHandling {
    * @returns Boolean indicating whether the alert was successfully acknowledged (always true if
    *          no acknowledgement happens for this alert type)
    */
-  def triggerAlert(n: Notification): Boolean
+  def triggerAlert(n: Notification)(implicit ec: ExecutionContext): Future[Boolean]
 }

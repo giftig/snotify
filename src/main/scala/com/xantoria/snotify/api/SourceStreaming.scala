@@ -14,7 +14,7 @@ import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.persist.Persistence
 
 trait SourceStreaming extends StrictLogging {
-  protected val alertHandler: ActorRef
+  protected val scheduler: ActorRef
   protected implicit val actorSystem: ActorSystem
   protected implicit val mat: Materializer
 
@@ -56,7 +56,7 @@ trait SourceStreaming extends StrictLogging {
     }
   }
 
-  private val handleAlerts: Sink[ReceivedNotification, NotUsed] = Sink.actorRef(alertHandler, Done)
+  private val handleAlerts: Sink[ReceivedNotification, NotUsed] = Sink.actorRef(scheduler, Done)
 
   /**
    * Run the stream which reads notifications from sources, persists them, and schedules them

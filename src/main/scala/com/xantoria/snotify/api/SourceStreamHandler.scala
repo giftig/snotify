@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
 
 class SourceStreamHandler(
-  protected val alertHandler: ActorRef,
+  protected val scheduler: ActorRef,
   system: ActorSystem,
   materializer: Materializer
 ) extends SourceStreaming {

@@ -39,6 +39,10 @@ object Config {
   val persistHandler: Class[_] = Class.forName(persist.getString("class"))
   val persistThreads: Int = persist.getInt("threads")
 
+  val alertHandlers: Seq[Class[_]] = cfg.getStringList("alerting.handlers").asScala map {
+    c => Class.forName(c)
+  }
+
   private val queuePrefix = amq.getString("queue-prefix")
   val inputQueue = s"$queuePrefix-$clientId"
   val peerQueues = peerIds.map { s: String => (s, s"$queuePrefix-$s") }.toMap

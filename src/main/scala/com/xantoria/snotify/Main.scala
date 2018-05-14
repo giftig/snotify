@@ -9,16 +9,28 @@ import akka.stream.alpakka.amqp.scaladsl.CommittableIncomingMessage
 import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
 
-import com.xantoria.snotify.alert.AlertHandler
+import com.xantoria.snotify.alert._
 import com.xantoria.snotify.api.SourceStreamHandler
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.queue.QueueHandler
 
 object Main extends StrictLogging {
+  lazy val alertHandlers: Seq[AlertHandling] = {
+    Config.alertHandlers map {
+      c: Class[_] => c.newInstance match {
+        case a: AlertHandling => a
+        case _ => throw new IllegalArgumentException(s"Bad alert handling class ${c.getName}")
+      }
+    }
+  }
+
   def runSources()(implicit system: ActorSystem, mat: Materializer): Unit = {
-    val alertHandler: ActorRef = system.actorOf(Props(classOf[AlertHandler]))
-    val streamHandler = new SourceStreamHandler(alertHandler, system, mat)
+    import system.dispatcher
+
+    val alertHandler = new MultipleAlertHandler(alertHandlers)
+    val alertService: ActorRef = system.actorOf(Props(new AlertService(alertHandler)))
+    val streamHandler = new SourceStreamHandler(alertService, system, mat)
     streamHandler.runSources()
   }
 
