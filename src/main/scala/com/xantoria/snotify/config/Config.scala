@@ -42,6 +42,7 @@ object Config {
   val alertHandlers: Seq[Class[_]] = cfg.getStringList("alerting.handlers").asScala map {
     c => Class.forName(c)
   }
+  val alertingConfig: TConfig = cfg.getConfig("alerting.config")
 
   private val queuePrefix = amq.getString("queue-prefix")
   val inputQueue = s"$queuePrefix-$clientId"
