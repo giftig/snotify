@@ -19,7 +19,7 @@ class AudioAlert extends AlertHandling with StrictLogging {
   private lazy val driver = AudioDriver.forName(cfg.getString("driver"))
 
   override def triggerAlert(n: Notification)(implicit ec: ExecutionContext): Future[Boolean] = {
-    logger.debug(s"Playing sound $alertSound using driver ${driver.name}...")
+    logger.info(s"Playing sound ${alertSound.filename} using driver ${driver.name}...")
     driver.play(alertSound)
   }
 }
@@ -52,13 +52,16 @@ object AudioAlert {
     def play(sound: PlaybackConfig)(implicit ec: ExecutionContext): Future[Boolean]
   }
 
-  trait SubprocessAudioDriver extends AudioDriver {
+  trait SubprocessAudioDriver extends AudioDriver with StrictLogging {
     protected def command(sound: PlaybackConfig): Seq[String]
 
     override def play(sound: PlaybackConfig)(implicit ec: ExecutionContext): Future[Boolean] = {
       import scala.sys.process._
 
-      Future(command(sound) ! ProcessLogger(_ => ())) map { _ == 0 }
+      val cmd = command(sound)
+      logger.debug(s"Running command: $cmd")
+
+      Future(cmd ! ProcessLogger(_ => ())) map { _ == 0 }
     }
   }
 
