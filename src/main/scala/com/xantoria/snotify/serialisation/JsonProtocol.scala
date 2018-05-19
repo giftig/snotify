@@ -4,7 +4,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import spray.json._
 
-import com.xantoria.snotify.model.Notification
+import com.xantoria.snotify.model.{Notification, Priority}
 
 object JsonProtocol extends DefaultJsonProtocol {
   private val datePattern: String = "yyyy-MM-dd HH:mm:ss"
@@ -53,6 +53,7 @@ object JsonProtocol extends DefaultJsonProtocol {
         n.creationTime map { t => JsString(t.toString(datePattern)) } getOrElse JsNull
       },
       "source" -> (n.source map { JsString(_) } getOrElse JsNull),
+      "priority" -> JsNumber(n.priority),
       "complete" -> JsBoolean(n.complete)
     ))
 
@@ -89,6 +90,12 @@ object JsonProtocol extends DefaultJsonProtocol {
         source = fields.get("source") map {
           v: JsValue => requireString(v, "notification source", Some(MaxTargetLen))
         },
+        priority = fields.get("priority") map {
+          case JsNumber(n) if Priority.isValid(n) => n.toInt
+          case JsNumber(_) => deserializationError(
+            "Wrong type or out of bounds notification priority"
+          )
+        } getOrElse Priority.Default,
         complete = fields.get("boolean") map {
           case JsBoolean(b: Boolean) => b
           case _ => deserializationError("Wrong type for notification 'complete' field")

@@ -15,6 +15,7 @@ case class Notification(
   triggerTime: DateTime,
   creationTime: Option[DateTime],
   source: Option[String],
+  priority: Int,
   complete: Boolean
 )
 
