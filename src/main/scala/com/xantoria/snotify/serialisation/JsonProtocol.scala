@@ -48,8 +48,8 @@ object JsonProtocol extends DefaultJsonProtocol {
       "body" -> JsString(n.body),
       "title" -> (n.title map { JsString(_) } getOrElse JsNull),
       "targets" -> JsArray(n.targets.map { JsString(_) }.toVector),
-      "triggerTime" -> JsString(n.triggerTime.toString(datePattern)),
-      "creationTime" -> {
+      "trigger_time" -> JsString(n.triggerTime.toString(datePattern)),
+      "creation_time" -> {
         n.creationTime map { t => JsString(t.toString(datePattern)) } getOrElse JsNull
       },
       "source" -> (n.source map { JsString(_) } getOrElse JsNull),
@@ -61,16 +61,19 @@ object JsonProtocol extends DefaultJsonProtocol {
       val fields = data.asJsObject.fields
       import Notification.{id => _, _}
 
+      // Convenience method to get an optional field from fields and treat JsNull as absent
+      def field(s: String): Option[JsValue] = fields.get(s) filterNot { _ == JsNull }
+
       Notification(
-        id = fields.get("id") map {
+        id = field("id") map {
           case JsString(s) => s
           case _ => deserializationError("Wrong type for notification id")
         } getOrElse Notification.id,
-        body = requireString(fields.get("body"), "notification body", Some(MaxBodyLen)),
-        title = fields.get("title") map {
+        body = requireString(field("body"), "notification body", Some(MaxBodyLen)),
+        title = field("title") map {
           v: JsValue => requireString(v, "notification title", Some(MaxTitleLen))
         },
-        targets = fields.get("targets") map {
+        targets = field("targets") map {
           case JsArray(targets) if targets.nonEmpty => targets map {
             v: JsValue => requireString(v, "notification target", Some(MaxTargetLen))
           }
@@ -78,25 +81,25 @@ object JsonProtocol extends DefaultJsonProtocol {
           case _ => deserializationError("Wrong type for notification targets")
         } getOrElse deserializationError("Missing notification targets"),
         triggerTime = DateTime.parse(
-          requireString(fields.get("trigger_time"), "trigger time", maxLength = None),
+          requireString(field("trigger_time"), "trigger time", maxLength = None),
           dateFormatter
         ),
-        creationTime = fields.get("creation_time") map {
+        creationTime = field("creation_time") map {
           v: JsValue => {
             val t = requireString(v, "notification creation time", maxLength = None)
             DateTime.parse(t, dateFormatter)
           }
         },
-        source = fields.get("source") map {
+        source = field("source") map {
           v: JsValue => requireString(v, "notification source", Some(MaxTargetLen))
         },
-        priority = fields.get("priority") map {
+        priority = field("priority") map {
           case JsNumber(n) if Priority.isValid(n) => n.toInt
           case JsNumber(_) => deserializationError(
             "Wrong type or out of bounds notification priority"
           )
         } getOrElse Priority.Default,
-        complete = fields.get("boolean") map {
+        complete = field("boolean") map {
           case JsBoolean(b: Boolean) => b
           case _ => deserializationError("Wrong type for notification 'complete' field")
         } getOrElse false
