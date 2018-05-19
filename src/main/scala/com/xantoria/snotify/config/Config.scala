@@ -38,6 +38,7 @@ object Config {
 
   val persistHandler: Class[_] = Class.forName(persist.getString("class"))
   val persistThreads: Int = persist.getInt("threads")
+  val persistConfig: TConfig = persist.getConfig("config")  // storage-specific config
 
   val alertHandlers: Seq[Class[_]] = cfg.getStringList("alerting.handlers").asScala map {
     c => Class.forName(c)

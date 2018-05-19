@@ -34,5 +34,7 @@ class NoStorage extends Persistence with StrictLogging {
   /**
    * Noop; always return successfully
    */
-  override def markComplete(id: String)(implicit ec: ExecutionContext): Future[Unit] = Future.unit
+  override def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
+    Future.unit
+  }
 }

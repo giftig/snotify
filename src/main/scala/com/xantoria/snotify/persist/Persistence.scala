@@ -21,5 +21,11 @@ trait Persistence {
   /**
    * Mark the specified notification ID as complete
    */
-  def markComplete(id: String)(implicit ec: ExecutionContext): Future[Unit]
+  def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit]
+}
+
+object Persistence {
+  class NotificationConflict(id: String) extends IllegalStateException(
+    s"The notification $id has already been saved"
+  )
 }
