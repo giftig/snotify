@@ -10,11 +10,12 @@ import akka.stream.scaladsl._
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.config.Config
-import com.xantoria.snotify.model.ReceivedNotification
+import com.xantoria.snotify.model.{Notification, ReceivedNotification}
 import com.xantoria.snotify.persist.Persistence
 
 trait SourceStreaming extends StrictLogging {
   protected val scheduler: ActorRef
+  protected val persistHandler: Persistence
   protected implicit val actorSystem: ActorSystem
   protected implicit val mat: Materializer
 
@@ -34,16 +35,9 @@ trait SourceStreaming extends StrictLogging {
    * Construct a flow which persists a given notification locally
    */
   private def persistenceSteps: Flow[ReceivedNotification, ReceivedNotification, NotUsed] = {
-    val handler: Persistence = Config.persistHandler.newInstance match {
-      case p: Persistence => p
-      case _ => throw new IllegalArgumentException(
-        s"Bad persistence class ${Config.persistHandler.getName}"
-      )
-    }
-
     Flow[ReceivedNotification].mapAsync(Config.persistThreads) {
       n: ReceivedNotification => try {
-        val saved: Future[Unit] = handler.save(n.notification)
+        val saved: Future[Unit] = persistHandler.save(n.notification)
         saved foreach { _ => n.ack() }
         saved map { _ => n }
       } catch {
@@ -56,7 +50,11 @@ trait SourceStreaming extends StrictLogging {
     }
   }
 
-  private val handleAlerts: Sink[ReceivedNotification, NotUsed] = Sink.actorRef(scheduler, Done)
+  private val extractNotification: Flow[ReceivedNotification, Notification, NotUsed] = {
+    Flow[ReceivedNotification].map { n: ReceivedNotification => n.notification }
+  }
+
+  private val handleAlerts: Sink[Notification, NotUsed] = Sink.actorRef(scheduler, Done)
 
   /**
    * Run the stream which reads notifications from sources, persists them, and schedules them
@@ -71,9 +69,25 @@ trait SourceStreaming extends StrictLogging {
       _.source()
     } reduce { _.merge(_) }
 
-    src
-      .via(persistenceSteps)
-      .withAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
-      .runWith(handleAlerts)
+    val persistedSrc: Source[Notification, NotUsed] = Source.fromFuture(
+      persistHandler.findPending()
+    ) mapConcat { _.toList }
+
+    val g = GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
+      import GraphDSL.Implicits._
+
+      val merger = builder.add(Merge[Notification](2))
+
+      src ~> persistenceSteps ~> extractNotification ~> merger
+      persistedSrc ~> merger
+
+      merger ~> handleAlerts
+
+      ClosedShape
+    }
+
+    RunnableGraph.fromGraph(
+      g.withAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
+    ).run()
   }
 }

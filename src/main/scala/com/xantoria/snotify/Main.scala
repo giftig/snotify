@@ -13,6 +13,7 @@ import com.xantoria.snotify.alert._
 import com.xantoria.snotify.api.SourceStreamHandler
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.ReceivedNotification
+import com.xantoria.snotify.persist.Persistence
 import com.xantoria.snotify.queue.QueueHandler
 
 object Main extends StrictLogging {
@@ -25,12 +26,22 @@ object Main extends StrictLogging {
     }
   }
 
+  lazy val persistHandler: Persistence = Config.persistHandler.newInstance match {
+    case p: Persistence => p
+    case _ => throw new IllegalArgumentException(
+      s"Bad persistence class ${Config.persistHandler.getName}"
+    )
+  }
+
+
   def runSources()(implicit system: ActorSystem, mat: Materializer): Unit = {
     import system.dispatcher
 
     val alertHandler = new MultipleAlertHandler(alertHandlers)
-    val alertService: ActorRef = system.actorOf(Props(new AlertService(alertHandler)))
-    val streamHandler = new SourceStreamHandler(alertService, system, mat)
+    val alertService: ActorRef = system.actorOf(
+      Props(new AlertService(alertHandler, persistHandler))
+    )
+    val streamHandler = new SourceStreamHandler(alertService, persistHandler, system, mat)
     streamHandler.runSources()
   }
 
