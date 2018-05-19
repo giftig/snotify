@@ -106,12 +106,12 @@ class FileStorage extends Persistence with StrictLogging {
     results map { _.flatten }
   }
 
-  override def markComplete(n: Notification): Future[Unit] = {
+  override def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
     logger.info(s"Marking notification ${n.id} complete")
     val fn = createFilename(n)
     val src = new File(path, fn)
     val dest = new File(completedPath, fn)
-    src.moveTo(dest)
+    Future(src.renameTo(dest))
   }
 }
 
