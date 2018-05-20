@@ -14,7 +14,6 @@ import com.xantoria.snotify.api.SourceStreamHandler
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.persist.Persistence
-import com.xantoria.snotify.queue.QueueHandler
 
 object Main extends StrictLogging {
   lazy val alertHandlers: Seq[AlertHandling] = {
@@ -32,7 +31,6 @@ object Main extends StrictLogging {
       s"Bad persistence class ${Config.persistHandler.getName}"
     )
   }
-
 
   def runSources()(implicit system: ActorSystem, mat: Materializer): Unit = {
     import system.dispatcher
