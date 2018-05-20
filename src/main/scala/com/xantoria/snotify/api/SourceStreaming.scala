@@ -1,6 +1,7 @@
 package com.xantoria.snotify.api
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.{Done, NotUsed}
@@ -65,9 +66,18 @@ trait SourceStreaming extends StrictLogging {
   def runSources(): Unit = {
     logger.info("Running notification source streams...")
 
-    val src: Source[ReceivedNotification, NotUsed] = notificationSources map {
-      _.source()
-    } reduce { _.merge(_) }
+    val src: Source[ReceivedNotification, NotUsed] = {
+      val merged = notificationSources map {
+        _.source()
+      } reduce { _.merge(_) }
+
+      RestartSource.withBackoff(
+        minBackoff = 3.seconds,
+        maxBackoff = 15.seconds,
+        randomFactor = 0.2,
+        maxRestarts = 15
+      ) { () => merged }
+    }
 
     val persistedSrc: Source[Notification, NotUsed] = Source.fromFuture(
       persistHandler.findPending()
