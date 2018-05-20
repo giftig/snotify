@@ -50,7 +50,7 @@ object AlertScheduling {
   case class TriggerAlert(n: Notification)
 }
 
-class AlertService(
+class AlertScheduler(
   override protected val alertHandler: AlertHandling,
   override protected val persistHandler: Persistence
 ) extends Actor with AlertScheduling {

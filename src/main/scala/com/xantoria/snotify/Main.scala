@@ -38,10 +38,10 @@ object Main extends StrictLogging {
     import system.dispatcher
 
     val alertHandler = new MultipleAlertHandler(alertHandlers)
-    val alertService: ActorRef = system.actorOf(
-      Props(new AlertService(alertHandler, persistHandler))
+    val alertScheduler: ActorRef = system.actorOf(
+      Props(new AlertScheduler(alertHandler, persistHandler))
     )
-    val streamHandler = new SourceStreamHandler(alertService, persistHandler, system, mat)
+    val streamHandler = new SourceStreamHandler(alertScheduler, persistHandler, system, mat)
     streamHandler.runSources()
   }
 
