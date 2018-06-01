@@ -8,37 +8,22 @@ import com.typesafe.scalalogging.StrictLogging
 import com.xantoria.snotify.alert.AlertHandling
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.{Notification, Priority}
+import com.xantoria.snotify.utils.PriorityTranslator
 
 class NotifySendAlert extends AlertHandling with StrictLogging {
+  import NotifySendAlert._
+
   private lazy val cfg = Config.alertingConfig.getConfig("notify-send")
 
   private lazy val icons: Map[String, String] = {
     val mapping = cfg.getConfig("icons")
 
-    urgencyThresholds.map { case (k, _) =>
-      val v: Option[String] = if (mapping.hasPath(k)) Some(mapping.getString(k)) else None
-      k -> v
+    Seq(LowUrgency, NormalUrgency, CriticalUrgency).map { urg =>
+      val v: Option[String] = if (mapping.hasPath(urg)) Some(mapping.getString(urg)) else None
+      urg -> v
     }.collect {
       case (k, Some(v)) => k -> v
     }.toMap
-  }
-
-  // Urgency is the given value if priority is < the specified threshold. Must be ascending order
-  private val urgencyThresholds: Seq[(String, Int)] = Seq(
-    "low" -> Priority.Medium,
-    "normal" -> Priority.High,
-    "critical" -> Priority.Max
-  )
-
-  /**
-   * Maps notification priority to notify-send "urgency"
-   */
-  private def urgency(p: Int): String = {
-    val (urg, _) = urgencyThresholds find {
-      case (name, maxValue) => maxValue > p
-    } getOrElse urgencyThresholds.last
-
-    urg
   }
 
   override def triggerAlert(n: Notification)(implicit ec: ExecutionContext): Future[Boolean] = {
@@ -61,7 +46,7 @@ class NotifySendAlert extends AlertHandling with StrictLogging {
       )
       val iconArg = icon map { i => Seq("-i", i) } getOrElse Nil
       val ending = Seq(
-        n.title getOrElse "(untitled notification)",
+        n.title getOrElse "(no title)",
         body
       )
       base ++: iconArg ++: ending
@@ -70,4 +55,17 @@ class NotifySendAlert extends AlertHandling with StrictLogging {
     logger.debug(s"Running command: $cmd")
     Future(cmd ! ProcessLogger(_ => ())) map { _ == 0 }
   }
+}
+
+object NotifySendAlert {
+  final val LowUrgency = "low"
+  final val NormalUrgency = "normal"
+  final val CriticalUrgency = "critical"
+
+  // Translate internal priority into a notify-send "urgency" label
+  private val urgency = new PriorityTranslator[String](Map(
+    Priority.Medium -> LowUrgency,
+    Priority.High -> NormalUrgency,
+    Priority.Max -> CriticalUrgency
+  ))
 }
