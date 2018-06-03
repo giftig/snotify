@@ -40,10 +40,7 @@ object Config {
   val persistThreads: Int = persist.getInt("threads")
   val persistConfig: TConfig = persist.getConfig("config")  // storage-specific config
 
-  val alertHandlers: Seq[Class[_]] = cfg.getStringList("alerting.handlers").asScala map {
-    c => Class.forName(c)
-  }
-  val alertingConfig: TConfig = cfg.getConfig("alerting.config")
+  val alertingConfig: TConfig = cfg.getConfig("alerting")
 
   private val queuePrefix = amq.getString("queue-prefix")
   val inputQueue = s"$queuePrefix-$clientId"

@@ -1,8 +1,11 @@
+val akkaHttpVersion = "10.1.1"
+
 lazy val deps = Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.18",
   "com.typesafe" % "config" % "1.3.3",
-  "com.typesafe.akka" %% "akka-http" % "10.1.1",
+  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "io.spray" %% "spray-json" % "1.3.4",
   "joda-time" % "joda-time" % "2.9.9"

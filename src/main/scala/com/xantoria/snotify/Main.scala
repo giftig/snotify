@@ -16,15 +16,6 @@ import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.persist.Persistence
 
 object Main extends StrictLogging {
-  lazy val alertHandlers: Seq[AlertHandling] = {
-    Config.alertHandlers map {
-      c: Class[_] => c.newInstance match {
-        case a: AlertHandling => a
-        case _ => throw new IllegalArgumentException(s"Bad alert handling class ${c.getName}")
-      }
-    }
-  }
-
   lazy val persistHandler: Persistence = Config.persistHandler.newInstance match {
     case p: Persistence => p
     case _ => throw new IllegalArgumentException(
@@ -35,7 +26,7 @@ object Main extends StrictLogging {
   def runSources()(implicit system: ActorSystem, mat: Materializer): Unit = {
     import system.dispatcher
 
-    val alertHandler = new MultipleAlertHandler(alertHandlers)
+    val alertHandler = new RootAlertHandler
     val alertScheduler: ActorRef = system.actorOf(
       Props(new AlertScheduler(alertHandler, persistHandler))
     )
