@@ -14,6 +14,7 @@ import com.xantoria.snotify.api.SourceStreamHandler
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.persist.Persistence
+import com.xantoria.snotify.rest.{Service => RestService}
 
 object Main extends StrictLogging {
   lazy val persistHandler: Persistence = Config.persistHandler.newInstance match {
@@ -21,6 +22,10 @@ object Main extends StrictLogging {
     case _ => throw new IllegalArgumentException(
       s"Bad persistence class ${Config.persistHandler.getName}"
     )
+  }
+
+  def runRestApi()(implicit system: ActorSystem, mat: Materializer): Unit = {
+    new RestService(Config.restInterface, Config.restPort).serve()
   }
 
   def runSources()(implicit system: ActorSystem, mat: Materializer): Unit = {
@@ -39,6 +44,7 @@ object Main extends StrictLogging {
 
     implicit val system = ActorSystem("snotify")
     implicit val mat = ActorMaterializer()
+    runRestApi()
     runSources()
   }
 }

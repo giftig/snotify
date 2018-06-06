@@ -11,6 +11,7 @@ object Config {
   private val cfg: TConfig = ConfigFactory.load()
   private val amq: TConfig = cfg.getConfig("amq")
   private val persist: TConfig = cfg.getConfig("persist")
+  private val rest: TConfig = cfg.getConfig("rest")
 
   val clientId = cfg.getString("client-id")
   val peerIds: Set[String] = cfg.getStringList("cluster.peers").asScala.toSet
@@ -50,5 +51,8 @@ object Config {
   val inputQueue = s"$queuePrefix-$clientId"
   val peerQueues = peerIds.map { s: String => (s, s"$queuePrefix-$s") }.toMap
 
-  val amqInputBufferSize = amq.getInt("buffer-size")
+  val amqInputBufferSize: Int = amq.getInt("buffer-size")
+
+  val restInterface: String = rest.getString("interface")
+  val restPort: Int = rest.getInt("port")
 }
