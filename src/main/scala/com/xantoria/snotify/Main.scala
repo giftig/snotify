@@ -28,7 +28,7 @@ object Main extends StrictLogging {
 
     val alertHandler = new RootAlertHandler
     val alertScheduler: ActorRef = system.actorOf(
-      Props(new AlertScheduler(alertHandler, persistHandler))
+      Props(new AlertScheduler(alertHandler, persistHandler, Config.alertingBackoff))
     )
     val streamHandler = new SourceStreamHandler(alertScheduler, persistHandler, system, mat)
     streamHandler.runSources()

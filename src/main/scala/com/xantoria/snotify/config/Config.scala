@@ -4,7 +4,10 @@ import scala.collection.JavaConverters._
 
 import com.typesafe.config.{Config => TConfig, ConfigFactory}
 
+import com.xantoria.snotify.backoff.BackoffStrategy
+
 object Config {
+  import ConfigHelpers._
   private val cfg: TConfig = ConfigFactory.load()
   private val amq: TConfig = cfg.getConfig("amq")
   private val persist: TConfig = cfg.getConfig("persist")
@@ -41,6 +44,7 @@ object Config {
   val persistConfig: TConfig = persist.getConfig("config")  // storage-specific config
 
   val alertingConfig: TConfig = cfg.getConfig("alerting")
+  val alertingBackoff: BackoffStrategy = alertingConfig.getBackoffStrategy("backoff-strategy")
 
   private val queuePrefix = amq.getString("queue-prefix")
   val inputQueue = s"$queuePrefix-$clientId"
