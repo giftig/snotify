@@ -35,6 +35,11 @@ class FileStorage extends Persistence with StrictLogging {
     ensureDirExists(f)
     f
   }
+  private val failedPath: File = {
+    val f = new File(path, "failed")
+    ensureDirExists(f)
+    f
+  }
 
   /**
    * Check that the configured path is usable, creating it if absent and throwing if non-writable
@@ -113,8 +118,16 @@ class FileStorage extends Persistence with StrictLogging {
     val dest = new File(completedPath, fn)
     Future(src.renameTo(dest))
   }
+
+  override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
+    logger.info(s"Marking notification ${n.id} undeliverable")
+    val fn = createFilename(n)
+    val src = new File(path, fn)
+    val dest = new File(failedPath, fn)
+    Future(src.renameTo(dest))
+  }
 }
 
 object FileStorage {
-  val FilenamePattern: Regex= """.+\.json$""".r
+  val FilenamePattern: Regex = """.+\.json$""".r
 }

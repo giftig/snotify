@@ -19,9 +19,14 @@ trait Persistence {
   def findPending()(implicit ec: ExecutionContext): Future[Seq[Notification]]
 
   /**
-   * Mark the specified notification ID as complete
+   * Mark the specified notification as complete
    */
   def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit]
+
+  /**
+   * Mark the specified notification as undeliverable
+   */
+  def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit]
 }
 
 object Persistence {
