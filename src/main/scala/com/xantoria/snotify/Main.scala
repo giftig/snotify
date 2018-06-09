@@ -11,7 +11,7 @@ import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.alert._
-import com.xantoria.snotify.api.{SourceStreamHandler, SourceStreaming}
+import com.xantoria.snotify.api.{NotificationReader, NotificationReading}
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.persist._
@@ -42,8 +42,8 @@ object Main extends StrictLogging {
   def sourceHandler(
     streamingDao: StreamingPersistence,
     scheduler: ActorRef,
-  )(implicit system: ActorSystem, mat: Materializer): SourceStreaming = {
-    new SourceStreamHandler(scheduler, streamingDao, system, mat)
+  )(implicit system: ActorSystem, mat: Materializer): NotificationReading = {
+    new NotificationReader(scheduler, streamingDao, system, mat)
   }
 
   def main(args: Array[String]): Unit = {

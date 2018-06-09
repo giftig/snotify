@@ -5,12 +5,12 @@ import akka.stream.Materializer
 
 import com.xantoria.snotify.persist.StreamingPersistence
 
-class SourceStreamHandler(
+class NotificationReader(
   override protected val scheduler: ActorRef,
   override protected val persistStreamer: StreamingPersistence,
   system: ActorSystem,
   materializer: Materializer
-) extends SourceStreaming {
+) extends NotificationReading {
   override protected implicit val actorSystem = system
   override protected implicit val mat = materializer
 }

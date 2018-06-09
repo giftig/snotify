@@ -14,7 +14,7 @@ import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
 import com.xantoria.snotify.persist.StreamingPersistence
 
-trait SourceStreaming extends StrictLogging {
+trait NotificationReading extends StrictLogging {
   protected val persistStreamer: StreamingPersistence
   protected val scheduler: ActorRef
 
@@ -42,7 +42,7 @@ trait SourceStreaming extends StrictLogging {
   def runSources(): Unit = {
     logger.info("Running notification source streams...")
 
-    // TODO: This should stay in SourceStreaming, in another method
+    // TODO: This should stay in NotificationReading, in another method
     val src: Source[ReceivedNotification, NotUsed] = {
       val merged = notificationSources map {
         _.source()
