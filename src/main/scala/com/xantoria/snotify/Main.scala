@@ -2,6 +2,7 @@ package com.xantoria.snotify
 
 import scala.util.{Failure, Success}
 
+import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.alpakka.amqp.QueueDeclaration
@@ -10,7 +11,7 @@ import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.alert._
-import com.xantoria.snotify.api.SourceStreamHandler
+import com.xantoria.snotify.api.{SourceStreamHandler, SourceStreaming}
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.persist.Persistence
@@ -24,19 +25,23 @@ object Main extends StrictLogging {
     )
   }
 
-  def runRestApi()(implicit system: ActorSystem, mat: Materializer): Unit = {
-    new RestService(Config.restInterface, Config.restPort).serve()
+  def restApi(
+    notificationSink: Sink[ReceivedNotification, NotUsed]
+  )(implicit system: ActorSystem, mat: Materializer): RestService = {
+    new RestService(Config.restInterface, Config.restPort, notificationSink)
   }
 
-  def runSources()(implicit system: ActorSystem, mat: Materializer): Unit = {
+  def alertScheduler()(implicit system: ActorSystem, mat: Materializer): ActorRef = {
     import system.dispatcher
 
     val alertHandler = new RootAlertHandler
-    val alertScheduler: ActorRef = system.actorOf(
-      Props(new AlertScheduler(alertHandler, persistHandler, Config.alertingBackoff))
-    )
-    val streamHandler = new SourceStreamHandler(alertScheduler, persistHandler, system, mat)
-    streamHandler.runSources()
+    system.actorOf(Props(new AlertScheduler(alertHandler, persistHandler, Config.alertingBackoff)))
+  }
+
+  def sourceHandler(
+    alertScheduler: ActorRef
+  )(implicit system: ActorSystem, mat: Materializer): SourceStreaming = {
+    new SourceStreamHandler(alertScheduler, persistHandler, system, mat)
   }
 
   def main(args: Array[String]): Unit = {
@@ -44,7 +49,12 @@ object Main extends StrictLogging {
 
     implicit val system = ActorSystem("snotify")
     implicit val mat = ActorMaterializer()
-    runRestApi()
-    runSources()
+
+    val scheduler = alertScheduler()
+    val srcHandler = sourceHandler(scheduler)
+    val rest = restApi(srcHandler.persistAndSchedule)
+
+    srcHandler.runSources()
+    rest.serve()
   }
 }

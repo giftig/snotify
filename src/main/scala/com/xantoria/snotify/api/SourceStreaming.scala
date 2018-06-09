@@ -22,7 +22,7 @@ trait SourceStreaming extends StrictLogging {
 
   import actorSystem.dispatcher
 
-  private def notificationSources: Seq[NotificationSource[ReceivedNotification]] = {
+  private lazy val notificationSources: Seq[NotificationSource[ReceivedNotification]] = {
     Config.notificationReaders map { c =>
       val reader = c.newInstance
       reader match {
@@ -32,15 +32,17 @@ trait SourceStreaming extends StrictLogging {
     }
   }
 
+  // TODO: These flows can be separated out
+
   /**
    * Construct a flow which persists a given notification locally
    */
-  private def persistenceSteps: Flow[ReceivedNotification, ReceivedNotification, NotUsed] = {
+  val persistenceSteps: Flow[ReceivedNotification, Notification, NotUsed] = {
     Flow[ReceivedNotification].mapAsync(Config.persistThreads) {
       n: ReceivedNotification => try {
         val saved: Future[Unit] = persistHandler.save(n.notification)
         saved foreach { _ => n.ack() }
-        saved map { _ => n }
+        saved map { _ => n.notification }
       } catch {
         case NonFatal(t) => {
           logger.error(s"Unexpected error persisting notification $n", t)
@@ -51,11 +53,9 @@ trait SourceStreaming extends StrictLogging {
     }
   }
 
-  private val extractNotification: Flow[ReceivedNotification, Notification, NotUsed] = {
-    Flow[ReceivedNotification].map { n: ReceivedNotification => n.notification }
-  }
+  val handleAlerts: Sink[Notification, NotUsed] = Sink.actorRef(scheduler, Done)
 
-  private val handleAlerts: Sink[Notification, NotUsed] = Sink.actorRef(scheduler, Done)
+  val persistAndSchedule: Sink[ReceivedNotification, NotUsed] = persistenceSteps.to(handleAlerts)
 
   /**
    * Run the stream which reads notifications from sources, persists them, and schedules them
@@ -88,7 +88,7 @@ trait SourceStreaming extends StrictLogging {
 
       val merger = builder.add(Merge[Notification](2))
 
-      src ~> persistenceSteps ~> extractNotification ~> merger
+      src ~> persistenceSteps ~> merger
       persistedSrc ~> merger
 
       merger ~> handleAlerts
