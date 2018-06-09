@@ -19,7 +19,7 @@ class AudioAlert extends AlertHandling with StrictLogging {
   private lazy val driver = AudioDriver.forName(cfg.getString("driver"))
 
   override def triggerAlert(n: Notification)(implicit ec: ExecutionContext): Future[Boolean] = {
-    logger.info(s"Playing sound ${alertSound.filename} using driver ${driver.name}...")
+    logger.debug(s"Playing sound ${alertSound.filename} using driver ${driver.name}...")
     driver.play(alertSound)
   }
 }

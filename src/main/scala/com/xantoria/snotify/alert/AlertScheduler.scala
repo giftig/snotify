@@ -23,6 +23,10 @@ trait AlertScheduling extends StrictLogging {
   protected val backoffStrategy: BackoffStrategy
 
   protected def triggerAlert(n: Notification, attempt: Int = 0): Future[Unit] = {
+    logger.info {
+      val attemptClause = if (attempt == 0) "" else s" (attempt #${attempt + 1})"
+      s"Triggering alerts for notification ${n.id}$attemptClause"
+    }
     val result: Future[Boolean] = alertHandler.triggerAlert(n) recover {
       case NonFatal(e) => {
         logger.error(s"Unexpected exception triggering notification ${n.id}")

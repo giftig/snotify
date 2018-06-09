@@ -28,7 +28,7 @@ class NotifySendAlert extends AlertHandling with StrictLogging {
 
   override def triggerAlert(n: Notification)(implicit ec: ExecutionContext): Future[Boolean] = {
     import scala.sys.process._
-    logger.info(s"Displaying notification ${n.id} with notify-send...")
+    logger.debug(s"Displaying notification ${n.id} with notify-send...")
 
     val urg: String = urgency(n.priority)
     val icon: Option[String] = icons.get(urg)

@@ -11,11 +11,11 @@ case class AMQPNotification(
 ) extends ReceivedNotification with StrictLogging {
   override def ack(): Unit = message.ack()
   override def reject(): Unit = {
-    logger.warn(s"Rejected notification ${notification.id}")
+    logger.warn(s"Rejected $this")
     message.nack(requeue = false)
   }
   override def retry(): Unit = {
-    logger.warn(s"Requeued notification ${notification.id}")
+    logger.warn(s"Requeued $this")
     message.nack(requeue = true)
   }
 }

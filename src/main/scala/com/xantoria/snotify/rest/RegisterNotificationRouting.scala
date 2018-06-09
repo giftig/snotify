@@ -28,8 +28,6 @@ trait RegisterNotificationRouting extends SprayJsonSupport with StrictLogging {
     pathEndOrSingleSlash {
       post {
         entity(as[Notification]) { n =>
-          logger.info(s"Notification posted to REST interface: $n")
-
           val wrapped = RestNotification(n)
           Source.single(wrapped).runWith(notificationSink)
 

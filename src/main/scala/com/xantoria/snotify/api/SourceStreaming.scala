@@ -41,11 +41,14 @@ trait SourceStreaming extends StrictLogging {
     Flow[ReceivedNotification].mapAsync(Config.persistThreads) {
       n: ReceivedNotification => try {
         val saved: Future[Unit] = persistHandler.save(n.notification)
-        saved foreach { _ => n.ack() }
+        saved foreach { _ =>
+          logger.info(s"Successfully wrote $n")
+          n.ack()
+        }
         saved map { _ => n.notification }
       } catch {
         case NonFatal(t) => {
-          logger.error(s"Unexpected error persisting notification $n", t)
+          logger.error(s"Unexpected error persisting $n", t)
           n.retry()
           throw t
         }

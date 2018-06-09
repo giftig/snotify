@@ -9,4 +9,6 @@ trait ReceivedNotification {
   def ack(): Unit
   def reject(): Unit
   def retry(): Unit
+
+  override def toString: String = s"${getClass.getSimpleName} ${notification.id}"
 }
