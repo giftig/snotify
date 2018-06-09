@@ -1,4 +1,4 @@
-package com.xantoria.snotify.api
+package com.xantoria.snotify.streaming
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source

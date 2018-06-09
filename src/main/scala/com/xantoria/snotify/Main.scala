@@ -11,11 +11,15 @@ import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.alert._
-import com.xantoria.snotify.api.{NotificationReader, NotificationReading}
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.persist._
 import com.xantoria.snotify.rest.{Service => RestService}
+import com.xantoria.snotify.streaming.{
+  App => StreamingApp,
+  NotificationReader,
+  NotificationReading
+}
 
 object Main extends StrictLogging {
   lazy val notificationDao: Persistence = Config.persistHandler.newInstance match {
@@ -39,13 +43,6 @@ object Main extends StrictLogging {
     system.actorOf(Props(new AlertScheduler(alertHandler, dao, Config.alertingBackoff)))
   }
 
-  def sourceHandler(
-    streamingDao: StreamingPersistence,
-    scheduler: ActorRef,
-  )(implicit system: ActorSystem, mat: Materializer): NotificationReading = {
-    new NotificationReader(scheduler, streamingDao, system, mat)
-  }
-
   def main(args: Array[String]): Unit = {
     logger.info("Starting service snotify...")
 
@@ -56,10 +53,13 @@ object Main extends StrictLogging {
 
     val streamingDao = new StreamingDao(notificationDao, Config.persistThreads)
     val scheduler = alertScheduler(notificationDao)
-    val srcHandler = sourceHandler(streamingDao, scheduler)
-    val rest = restApi(streamingDao, scheduler)
+    val streamNotificationSource = new NotificationReader
 
-    srcHandler.runSources()
+    val streamingApp = new StreamingApp(scheduler, streamingDao, streamNotificationSource)
+    val rest = new RestService(Config.restInterface, Config.restPort, streamingDao, scheduler)
+
+    // TODO: Graceful shutdown?
+    streamingApp.run()
     rest.serve()
   }
 }

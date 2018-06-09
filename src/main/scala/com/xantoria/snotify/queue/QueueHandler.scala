@@ -10,10 +10,10 @@ import akka.stream.alpakka.amqp.scaladsl._
 import com.typesafe.scalalogging.StrictLogging
 import spray.json._
 
-import com.xantoria.snotify.api.NotificationSource
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.Notification
 import com.xantoria.snotify.serialisation.JsonProtocol._
+import com.xantoria.snotify.streaming.NotificationSource
 
 trait QueueHandling extends NotificationSource[AMQPNotification] {
   protected val input: QueueDeclaration
