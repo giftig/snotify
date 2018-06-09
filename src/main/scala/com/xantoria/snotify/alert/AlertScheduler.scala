@@ -19,7 +19,7 @@ trait AlertScheduling extends StrictLogging {
   import context.dispatcher
 
   protected val alertHandler: AlertHandling
-  protected val persistHandler: Persistence
+  protected val notificationDao: Persistence
   protected val backoffStrategy: BackoffStrategy
 
   protected def triggerAlert(n: Notification, attempt: Int = 0): Future[Unit] = {
@@ -35,11 +35,11 @@ trait AlertScheduling extends StrictLogging {
     }
 
     result map {
-      case true => persistHandler.markComplete(n)
+      case true => notificationDao.markComplete(n)
       case _ => {
         logger.warn(s"Notification ${n.id} was marked unacknowledged or delivery failed")
         if (!rescheduleNotification(n, attempt + 1)) {
-          persistHandler.markFailed(n)
+          notificationDao.markFailed(n)
         }
       }
     }
@@ -76,7 +76,7 @@ object AlertScheduling {
 
 class AlertScheduler(
   override protected val alertHandler: AlertHandling,
-  override protected val persistHandler: Persistence,
+  override protected val notificationDao: Persistence,
   override protected val backoffStrategy: BackoffStrategy = new ExponentialBackoffStrategy()
 ) extends Actor with AlertScheduling {
   import AlertScheduling._

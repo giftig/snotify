@@ -12,11 +12,12 @@ import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
-import com.xantoria.snotify.persist.Persistence
+import com.xantoria.snotify.persist.StreamingPersistence
 
 trait SourceStreaming extends StrictLogging {
+  protected val persistStreamer: StreamingPersistence
   protected val scheduler: ActorRef
-  protected val persistHandler: Persistence
+
   protected implicit val actorSystem: ActorSystem
   protected implicit val mat: Materializer
 
@@ -32,34 +33,6 @@ trait SourceStreaming extends StrictLogging {
     }
   }
 
-  // TODO: These flows can be separated out
-
-  /**
-   * Construct a flow which persists a given notification locally
-   */
-  val persistenceSteps: Flow[ReceivedNotification, Notification, NotUsed] = {
-    Flow[ReceivedNotification].mapAsync(Config.persistThreads) {
-      n: ReceivedNotification => try {
-        val saved: Future[Unit] = persistHandler.save(n.notification)
-        saved foreach { _ =>
-          logger.info(s"Successfully wrote $n")
-          n.ack()
-        }
-        saved map { _ => n.notification }
-      } catch {
-        case NonFatal(t) => {
-          logger.error(s"Unexpected error persisting $n", t)
-          n.retry()
-          throw t
-        }
-      }
-    }
-  }
-
-  val handleAlerts: Sink[Notification, NotUsed] = Sink.actorRef(scheduler, Done)
-
-  val persistAndSchedule: Sink[ReceivedNotification, NotUsed] = persistenceSteps.to(handleAlerts)
-
   /**
    * Run the stream which reads notifications from sources, persists them, and schedules them
    *
@@ -69,6 +42,7 @@ trait SourceStreaming extends StrictLogging {
   def runSources(): Unit = {
     logger.info("Running notification source streams...")
 
+    // TODO: This should stay in SourceStreaming, in another method
     val src: Source[ReceivedNotification, NotUsed] = {
       val merged = notificationSources map {
         _.source()
@@ -82,19 +56,18 @@ trait SourceStreaming extends StrictLogging {
       ) { () => merged }
     }
 
-    val persistedSrc: Source[Notification, NotUsed] = Source.fromFuture(
-      persistHandler.findPending()
-    ) mapConcat { _.toList }
-
+    // TODO: Next thing is to move this (and this method) into a controller class which brings
+    // together all the disparate components
     val g = GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
       import GraphDSL.Implicits._
 
       val merger = builder.add(Merge[Notification](2))
+      val sink = Sink.actorRef(scheduler, Done)
 
-      src ~> persistenceSteps ~> merger
-      persistedSrc ~> merger
+      src ~> persistStreamer.persistFlow ~> merger
+      persistStreamer.persistedSource ~> merger
 
-      merger ~> handleAlerts
+      merger ~> sink
 
       ClosedShape
     }

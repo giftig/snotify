@@ -3,11 +3,11 @@ package com.xantoria.snotify.api
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
 
-import com.xantoria.snotify.persist.Persistence
+import com.xantoria.snotify.persist.StreamingPersistence
 
 class SourceStreamHandler(
-  protected val scheduler: ActorRef,
-  protected val persistHandler: Persistence,
+  override protected val scheduler: ActorRef,
+  override protected val persistStreamer: StreamingPersistence,
   system: ActorSystem,
   materializer: Materializer
 ) extends SourceStreaming {
