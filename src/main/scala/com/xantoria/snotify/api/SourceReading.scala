@@ -14,7 +14,7 @@ import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
 import com.xantoria.snotify.persist.StreamingPersistence
 
-trait NotificationReading extends StrictLogging {
+trait NotificationReading extends NotificationSource[ReceivedNotification] with StrictLogging {
   protected val persistStreamer: StreamingPersistence
   protected val scheduler: ActorRef
 
@@ -23,7 +23,7 @@ trait NotificationReading extends StrictLogging {
 
   import actorSystem.dispatcher
 
-  private lazy val notificationSources: Seq[NotificationSource[ReceivedNotification]] = {
+  private lazy val readers: Seq[NotificationSource[ReceivedNotification]] = {
     Config.notificationReaders map { c =>
       val reader = c.newInstance
       reader match {
@@ -31,6 +31,17 @@ trait NotificationReading extends StrictLogging {
         case _ => throw new IllegalArgumentException(s"Bad notification reader class ${c.getName}")
       }
     }
+  }
+
+  override def source(): Source[ReceivedNotification, NotUsed] = {
+    val merged = readers map { _.source() } reduce { _.merge(_) }
+
+    RestartSource.withBackoff(
+      minBackoff = 3.seconds,
+      maxBackoff = 15.seconds,
+      randomFactor = 0.2,
+      maxRestarts = 15
+    ) { () => merged }
   }
 
   /**
@@ -42,20 +53,6 @@ trait NotificationReading extends StrictLogging {
   def runSources(): Unit = {
     logger.info("Running notification source streams...")
 
-    // TODO: This should stay in NotificationReading, in another method
-    val src: Source[ReceivedNotification, NotUsed] = {
-      val merged = notificationSources map {
-        _.source()
-      } reduce { _.merge(_) }
-
-      RestartSource.withBackoff(
-        minBackoff = 3.seconds,
-        maxBackoff = 15.seconds,
-        randomFactor = 0.2,
-        maxRestarts = 15
-      ) { () => merged }
-    }
-
     // TODO: Next thing is to move this (and this method) into a controller class which brings
     // together all the disparate components
     val g = GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
@@ -64,7 +61,7 @@ trait NotificationReading extends StrictLogging {
       val merger = builder.add(Merge[Notification](2))
       val sink = Sink.actorRef(scheduler, Done)
 
-      src ~> persistStreamer.persistFlow ~> merger
+      source() ~> persistStreamer.persistFlow ~> merger
       persistStreamer.persistedSource ~> merger
 
       merger ~> sink
