@@ -1,4 +1,4 @@
-package com.xantoria.snotify.persist
+package com.xantoria.snotify.dao
 
 import scala.concurrent.ExecutionContext
 

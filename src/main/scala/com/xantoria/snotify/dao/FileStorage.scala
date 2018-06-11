@@ -1,4 +1,4 @@
-package com.xantoria.snotify.persist
+package com.xantoria.snotify.dao
 
 import java.io.{BufferedWriter, File, FileWriter}
 import scala.concurrent.{ExecutionContext, Future}

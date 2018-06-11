@@ -5,8 +5,8 @@ import akka.stream.Materializer
 
 import com.typesafe.scalalogging.StrictLogging
 
+import com.xantoria.snotify.dao.StreamingPersistence
 import com.xantoria.snotify.model.ReceivedNotification
-import com.xantoria.snotify.persist.StreamingPersistence
 
 class App(
   override protected val scheduler: ActorRef,

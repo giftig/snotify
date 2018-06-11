@@ -12,8 +12,8 @@ import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.alert._
 import com.xantoria.snotify.config.Config
+import com.xantoria.snotify.dao._
 import com.xantoria.snotify.model.ReceivedNotification
-import com.xantoria.snotify.persist._
 import com.xantoria.snotify.rest.{Service => RestService}
 import com.xantoria.snotify.streaming.{
   App => StreamingApp,

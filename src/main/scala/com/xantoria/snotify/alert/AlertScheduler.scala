@@ -8,8 +8,8 @@ import akka.actor._
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.backoff.{BackoffStrategy, ExponentialBackoffStrategy}
+import com.xantoria.snotify.dao.Persistence
 import com.xantoria.snotify.model.Notification
-import com.xantoria.snotify.persist.Persistence
 import com.xantoria.snotify.utils.{Time => TimeUtils}
 
 trait AlertScheduling extends StrictLogging {

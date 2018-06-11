@@ -7,8 +7,8 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
 
+import com.xantoria.snotify.dao.StreamingPersistence
 import com.xantoria.snotify.model.ReceivedNotification
-import com.xantoria.snotify.persist.StreamingPersistence
 
 
 class Service(

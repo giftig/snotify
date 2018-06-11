@@ -5,8 +5,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl._
 
+import com.xantoria.snotify.dao.StreamingPersistence
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
-import com.xantoria.snotify.persist.StreamingPersistence
 
 /**
  * Represents the notification streaming portion of the application
