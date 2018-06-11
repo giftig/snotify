@@ -48,6 +48,7 @@ object Config {
   val alertingBackoff: BackoffStrategy = alertingConfig.getBackoffStrategy("backoff-strategy")
 
   private val queuePrefix = amq.getString("queue-prefix")
+  val clusterInputQueue = queuePrefix
   val inputQueue = s"$queuePrefix-$clientId"
   val peerQueues = peerIds.map { s: String => (s, s"$queuePrefix-$s") }.toMap
 

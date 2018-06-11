@@ -5,7 +5,6 @@ import scala.concurrent.duration._
 import akka.NotUsed
 import akka.stream.scaladsl._
 
-import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
 
 /**
@@ -15,15 +14,9 @@ import com.xantoria.snotify.model.{Notification, ReceivedNotification}
  * provided as a single source with some supervision applied. This will then be fed into the
  * notification processing graph
  */
-trait NotificationReading extends NotificationSource[ReceivedNotification] {
-  private lazy val readers: Seq[NotificationSource[ReceivedNotification]] = {
-    Config.notificationReaders map { c =>
-      val reader = c.newInstance
-      reader match {
-        case r: NotificationSource[ReceivedNotification] => r
-        case _ => throw new IllegalArgumentException(s"Bad notification reader class ${c.getName}")
-      }
-    }
+trait NotificationSourceMerging extends NotificationSource[ReceivedNotification] {
+  protected def readers: Seq[NotificationSource[ReceivedNotification]] = {
+    NotificationSource.configuredReaders
   }
 
   override def source(): Source[ReceivedNotification, NotUsed] = {

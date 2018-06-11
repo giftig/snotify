@@ -15,20 +15,13 @@ import com.xantoria.snotify.model.Notification
 import com.xantoria.snotify.serialisation.JsonProtocol._
 import com.xantoria.snotify.streaming.NotificationSource
 
-trait QueueHandling extends NotificationSource[AMQPNotification] {
+trait QueueHandling extends NotificationSource[AMQPNotification] with StrictLogging {
   protected val input: QueueDeclaration
-  protected val peers: Map[String, QueueDeclaration]
-}
+  protected val amqInterface: String
 
-class QueueHandler extends QueueHandling with StrictLogging {
   private lazy val conn: AmqpConnectionProvider = {
-    logger.info(s"Connecting to AMQ at ${Config.amqInterface}")
-    AmqpUriConnectionProvider(Config.amqInterface)
-  }
-
-  override protected val input: QueueDeclaration = QueueDeclaration(Config.inputQueue)
-  override protected val peers: Map[String, QueueDeclaration] = Config.peerQueues mapValues {
-    q => QueueDeclaration(q)
+    logger.info(s"Connecting to AMQ at $amqInterface")
+    AmqpUriConnectionProvider(amqInterface)
   }
 
   override def source(): Source[AMQPNotification, NotUsed] = {
@@ -36,7 +29,7 @@ class QueueHandler extends QueueHandling with StrictLogging {
 
     val raw = AmqpSource.committableSource(
       NamedQueueSourceSettings(conn, input.name, Seq(input)),
-      Config.amqInputBufferSize
+      Config.amqInputBufferSize  // FIXME: Pass this in
     )
     raw map {
       msg: CommittableIncomingMessage => {
@@ -55,4 +48,11 @@ class QueueHandler extends QueueHandling with StrictLogging {
       }
     }
   }
+}
+
+class QueueHandler(
+  override protected val amqInterface: String,
+  inputQueueName: String
+) extends QueueHandling {
+  override protected val input: QueueDeclaration = QueueDeclaration(inputQueueName)
 }

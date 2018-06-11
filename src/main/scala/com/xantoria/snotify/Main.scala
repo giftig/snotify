@@ -14,29 +14,38 @@ import com.xantoria.snotify.alert._
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.dao._
 import com.xantoria.snotify.model.ReceivedNotification
+import com.xantoria.snotify.queue.{NotificationWriter, QueueHandler}
 import com.xantoria.snotify.rest.{Service => RestService}
-import com.xantoria.snotify.streaming.{
-  App => StreamingApp,
-  NotificationReader,
-  NotificationReading
-}
+import com.xantoria.snotify.streaming.{App => StreamingApp, _}
 
 object Main extends StrictLogging {
-  lazy val notificationDao: Persistence = Config.persistHandler.newInstance match {
+  private lazy val notificationDao: Persistence = Config.persistHandler.newInstance match {
     case p: Persistence => p
     case _ => throw new IllegalArgumentException(
       s"Bad persistence class ${Config.persistHandler.getName}"
     )
   }
 
-  def restApi(
+  private lazy val clusterHandler: NotificationSource[ReceivedNotification] = new ClusterHandler(
+    new QueueHandler(Config.amqInterface, Config.inputQueue),
+    new QueueHandler(Config.amqInterface, Config.clusterInputQueue),
+    new NotificationWriter,
+    Config.clientId,
+    Config.peerIds.toSet
+  )
+
+  private lazy val allSources: NotificationSource[ReceivedNotification] = {
+    new NotificationSourceMerger(clusterHandler +: NotificationSource.configuredReaders)
+  }
+
+  private def restApi(
     streamingDao: StreamingPersistence,
     scheduler: ActorRef
   )(implicit system: ActorSystem, mat: Materializer): RestService = {
     new RestService(Config.restInterface, Config.restPort, streamingDao, scheduler)
   }
 
-  def alertScheduler(dao: Persistence)(
+  private def alertScheduler(dao: Persistence)(
     implicit system: ActorSystem, mat: Materializer
   ): ActorRef = {
     val alertHandler = new RootAlertHandler
@@ -53,9 +62,8 @@ object Main extends StrictLogging {
 
     val streamingDao = new StreamingDao(notificationDao, Config.persistThreads)
     val scheduler = alertScheduler(notificationDao)
-    val streamNotificationSource = new NotificationReader
 
-    val streamingApp = new StreamingApp(scheduler, streamingDao, streamNotificationSource)
+    val streamingApp = new StreamingApp(scheduler, streamingDao, allSources)
     val rest = new RestService(Config.restInterface, Config.restPort, streamingDao, scheduler)
 
     // TODO: Graceful shutdown?
