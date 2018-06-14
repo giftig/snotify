@@ -78,7 +78,6 @@ trait ClusterHandling[T <: ReceivedNotification]
       val personal = personalReader.source()
       val unwrapNotification = Flow[ReceivedNotification].map { n => n.notification}
 
-      // TODO: Handle peer messages: need to attach a component which writes to RMQ
       cluster ~> resolver
       resolver ~> merger
       resolver ~> unwrapNotification ~> notificationWriter.sink
