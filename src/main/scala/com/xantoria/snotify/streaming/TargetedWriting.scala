@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
 
 import com.xantoria.snotify.model.Notification
-import com.xantoria.snotify.utils.Targeted
+import com.xantoria.snotify.targeting.Targeted
 
 trait TargetedWriting extends NotificationWriting with Targeted {
   protected val underlying: NotificationWriting

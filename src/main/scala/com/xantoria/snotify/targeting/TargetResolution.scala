@@ -1,4 +1,4 @@
-package com.xantoria.snotify.streaming
+package com.xantoria.snotify.targeting
 
 import com.xantoria.snotify.model.Notification
 

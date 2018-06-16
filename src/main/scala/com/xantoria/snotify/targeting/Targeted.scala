@@ -1,4 +1,4 @@
-package com.xantoria.snotify.utils
+package com.xantoria.snotify.targeting
 
 import com.xantoria.snotify.model.Notification
 
@@ -18,3 +18,4 @@ trait Targeted {
     n.targets.toSet.intersect(targets).nonEmpty
   }
 }
+
