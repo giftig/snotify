@@ -26,7 +26,7 @@ trait AMQPWriting extends NotificationWriting with AMQPConnectionMgmt with Stric
    */
   private def writeMessage(n: Notification): OutgoingMessage = {
     val rawData = ByteString(n.toJson.compactPrint)
-    new OutgoingMessage(bytes = rawData, immediate = true, mandatory = true)
+    new OutgoingMessage(bytes = rawData, immediate = false, mandatory = true)
   }
 
   /**
