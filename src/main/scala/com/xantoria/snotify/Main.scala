@@ -27,8 +27,8 @@ object Main extends StrictLogging {
   }
 
   private lazy val clusterHandler: NotificationSource[ReceivedNotification] = new ClusterHandler(
-    new QueueHandler(Config.amqInterface, Config.inputQueue),
-    new QueueHandler(Config.amqInterface, Config.clusterInputQueue),
+    new QueueHandler(Config.amqInterface, Config.inputQueue, Config.amqInputBufferSize),
+    new QueueHandler(Config.amqInterface, Config.clusterInputQueue, Config.amqInputBufferSize),
     new NotificationWriter,
     Config.clientId,
     Config.peerIds.toSet

@@ -10,7 +10,6 @@ import akka.stream.alpakka.amqp.scaladsl._
 import com.typesafe.scalalogging.StrictLogging
 import spray.json._
 
-import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.Notification
 import com.xantoria.snotify.serialisation.JsonProtocol._
 import com.xantoria.snotify.streaming.NotificationSource
@@ -18,6 +17,7 @@ import com.xantoria.snotify.streaming.NotificationSource
 trait QueueHandling extends NotificationSource[AMQPNotification] with StrictLogging {
   protected val input: QueueDeclaration
   protected val amqInterface: String
+  protected val bufferSize: Int
 
   private lazy val conn: AmqpConnectionProvider = {
     logger.info(s"Connecting to AMQ at $amqInterface")
@@ -29,7 +29,7 @@ trait QueueHandling extends NotificationSource[AMQPNotification] with StrictLogg
 
     val raw = AmqpSource.committableSource(
       NamedQueueSourceSettings(conn, input.name, Seq(input)),
-      Config.amqInputBufferSize  // FIXME: Pass this in
+      bufferSize
     )
     raw map {
       msg: CommittableIncomingMessage => {
@@ -52,7 +52,8 @@ trait QueueHandling extends NotificationSource[AMQPNotification] with StrictLogg
 
 class QueueHandler(
   override protected val amqInterface: String,
-  inputQueueName: String
+  inputQueueName: String,
+  override protected val bufferSize: Int
 ) extends QueueHandling {
   override protected val input: QueueDeclaration = QueueDeclaration(inputQueueName)
 }
