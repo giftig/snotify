@@ -5,7 +5,7 @@ import scala.util.{Failure, Success}
 import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.stream.alpakka.amqp.QueueDeclaration
+import akka.stream.alpakka.amqp.{QueueDeclaration => Queue}
 import akka.stream.alpakka.amqp.scaladsl.CommittableIncomingMessage
 import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
@@ -14,7 +14,7 @@ import com.xantoria.snotify.alert._
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.dao._
 import com.xantoria.snotify.model.ReceivedNotification
-import com.xantoria.snotify.queue.{NotificationWriter, QueueHandler}
+import com.xantoria.snotify.queue.{AMQPConnectionMgmt, AMQPReader, AMQPWriter}
 import com.xantoria.snotify.rest.{Service => RestService}
 import com.xantoria.snotify.streaming.{App => StreamingApp, _}
 
@@ -26,13 +26,24 @@ object Main extends StrictLogging {
     )
   }
 
-  private lazy val clusterHandler: NotificationSource[ReceivedNotification] = new ClusterHandler(
-    new QueueHandler(Config.amqInterface, Config.inputQueue, Config.amqInputBufferSize),
-    new QueueHandler(Config.amqInterface, Config.clusterInputQueue, Config.amqInputBufferSize),
-    new NotificationWriter,
-    Config.clientId,
-    Config.peerIds.toSet
-  )
+  // TODO: May need to connect to multiple hosts depending on the cluster
+  private lazy val amqpConn = AMQPConnectionMgmt.connection(Config.amqInterface)
+
+  private lazy val clusterHandler: NotificationSource[ReceivedNotification] = {
+    val outputQueues = Config.peerQueues.toList map { case (pid, queueName) =>
+      val q = Queue(queueName)
+      val writer = new AMQPWriter(amqpConn, q)
+      new TargetedWriter(writer, Set(pid))
+    }
+
+    new ClusterHandler(
+      new AMQPReader(amqpConn, Queue(Config.inputQueue), Config.amqInputBufferSize),
+      new AMQPReader(amqpConn, Queue(Config.clusterInputQueue), Config.amqInputBufferSize),
+      new NotificationSinkMerger(outputQueues),
+      Config.clientId,
+      Config.peerIds.toSet
+    )
+  }
 
   private lazy val allSources: NotificationSource[ReceivedNotification] = {
     new NotificationSourceMerger(clusterHandler +: NotificationSource.configuredReaders)

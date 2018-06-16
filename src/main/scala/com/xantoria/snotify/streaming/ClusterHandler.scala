@@ -1,7 +1,6 @@
 package com.xantoria.snotify.streaming
 
 import com.xantoria.snotify.model.ReceivedNotification
-import com.xantoria.snotify.queue.NotificationWriting
 
 class ClusterHandler[T <: ReceivedNotification](
   override protected val personalReader: NotificationSource[T],

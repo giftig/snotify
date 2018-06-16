@@ -14,21 +14,18 @@ import com.xantoria.snotify.model.Notification
 import com.xantoria.snotify.serialisation.JsonProtocol._
 import com.xantoria.snotify.streaming.NotificationSource
 
-trait QueueHandling extends NotificationSource[AMQPNotification] with StrictLogging {
-  protected val input: QueueDeclaration
-  protected val amqInterface: String
-  protected val bufferSize: Int
+trait AMQPReading extends NotificationSource[AMQPNotification]
+  with AMQPConnectionMgmt
+  with StrictLogging {
 
-  private lazy val conn: AmqpConnectionProvider = {
-    logger.info(s"Connecting to AMQ at $amqInterface")
-    AmqpUriConnectionProvider(amqInterface)
-  }
+  protected val input: QueueDeclaration
+  protected val bufferSize: Int
 
   override def source(): Source[AMQPNotification, NotUsed] = {
     logger.info(s"Consuming from ${input.name}")
 
     val raw = AmqpSource.committableSource(
-      NamedQueueSourceSettings(conn, input.name, Seq(input)),
+      NamedQueueSourceSettings(amqpConnection, input.name, Seq(input)),
       bufferSize
     )
     raw map {
@@ -48,12 +45,4 @@ trait QueueHandling extends NotificationSource[AMQPNotification] with StrictLogg
       }
     }
   }
-}
-
-class QueueHandler(
-  override protected val amqInterface: String,
-  inputQueueName: String,
-  override protected val bufferSize: Int
-) extends QueueHandling {
-  override protected val input: QueueDeclaration = QueueDeclaration(inputQueueName)
 }

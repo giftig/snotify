@@ -1,13 +1,14 @@
-package com.xantoria.snotify.queue
+package com.xantoria.snotify.streaming
 
 import akka.NotUsed
+import akka.stream.alpakka.amqp._
+import akka.stream.alpakka.amqp.scaladsl._
 import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
+
 
 import com.xantoria.snotify.model.Notification
 
 trait NotificationWriting extends StrictLogging {
-  val sink: Sink[Notification, _] = Sink.foreach { n =>
-    logger.warn(s"NOT IMPLEMENTED: not writing ${n.id} to peer queue") // FIXME
-  }
+  def sink(): Sink[Notification, NotUsed]
 }

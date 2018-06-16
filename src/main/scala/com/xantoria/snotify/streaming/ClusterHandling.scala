@@ -6,7 +6,6 @@ import akka.stream.scaladsl._
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
-import com.xantoria.snotify.queue.NotificationWriting
 
 /**
  * Represents handling cluster mechanics by reading and writing to relevant queues

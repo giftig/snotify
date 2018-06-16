@@ -12,15 +12,25 @@ trait TargetResolution {
   protected val selfTarget: String
   protected val peers: Set[String]
 
+  /**
+   * Check whether the given target is this node, a peer node, or unknown
+   */
   protected def identify(target: String): Result = target match {
     case t if t == selfTarget => Self
     case t if peers.contains(t) => Peer
     case _ => Unknown
   }
 
-  protected def isSelf(n: Notification) = n.targets.map(identify).contains(Self)
-  protected def isPeer(n: Notification) = n.targets.map(identify).contains(Peer)
-  protected def isUnknown(n: Notification) = n.targets.map(identify).contains(Unknown)
+  protected def isSelf(n: Notification): Boolean = n.targets.map(identify).contains(Self)
+  protected def isPeer(n: Notification): Boolean = n.targets.map(identify).contains(Peer)
+  protected def isUnknown(n: Notification): Boolean = n.targets.map(identify).contains(Unknown)
+
+  /**
+   * Filter the notification's list of targets to those which correspond to known peers
+   */
+  protected def peerTargets(n: Notification): Seq[String] = {
+    n.targets collect { case t if identify(t) == Peer => t }
+  }
 }
 
 object TargetResolution {
