@@ -16,7 +16,7 @@ class App(
   override protected implicit val actorSystem: ActorSystem,
   override protected implicit val mat: Materializer
 ) extends NotificationStreaming with StrictLogging {
-  def run(): Unit = {
+  def run(): ActorRef = {
     logger.info("Running notification reader graph")
     graph.run()
   }

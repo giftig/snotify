@@ -49,13 +49,6 @@ object Main extends StrictLogging {
     new NotificationSourceMerger(clusterHandler +: NotificationSource.configuredReaders)
   }
 
-  private def restApi(
-    streamingDao: StreamingPersistence,
-    scheduler: ActorRef
-  )(implicit system: ActorSystem, mat: Materializer): RestService = {
-    new RestService(Config.restInterface, Config.restPort, streamingDao, scheduler)
-  }
-
   private def alertScheduler(dao: Persistence)(
     implicit system: ActorSystem, mat: Materializer
   ): ActorRef = {
@@ -74,11 +67,11 @@ object Main extends StrictLogging {
     val streamingDao = new StreamingDao(notificationDao, Config.persistThreads)
     val scheduler = alertScheduler(notificationDao)
 
-    val streamingApp = new StreamingApp(scheduler, streamingDao, allSources)
-    val rest = new RestService(Config.restInterface, Config.restPort, streamingDao, scheduler)
-
     // TODO: Graceful shutdown?
-    streamingApp.run()
+    val streamingApp = new StreamingApp(scheduler, streamingDao, allSources)
+    val notificationHook: ActorRef = streamingApp.run()
+
+    val rest = new RestService(Config.restInterface, Config.restPort, notificationHook)
     rest.serve()
   }
 }

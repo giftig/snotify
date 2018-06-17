@@ -31,20 +31,34 @@ trait NotificationStreaming {
   protected implicit val actorSystem: ActorSystem
   protected implicit val mat: Materializer
 
-  protected val graph: RunnableGraph[NotUsed] = {
-    val g = GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
+  /**
+   * Start the primary graph which connects sources through to the internal persist/schedule system
+   *
+   * Expose an ActorRef for an input hook as an additional Source alongside the NotificationSource
+   * system. This allows sending additional notifications from other sources via the actor system
+   * by materialising the graph as an ActorRef
+   */
+  protected val graph: RunnableGraph[ActorRef] = {
+    // TODO: configure
+    val actorRefHook = Source.actorRef[ReceivedNotification](100, OverflowStrategy.dropNew)
+
+    val g = GraphDSL.create(actorRefHook) { implicit b: GraphDSL.Builder[ActorRef] => actorRef => {
       import GraphDSL.Implicits._
 
-      val merger = builder.add(Merge[Notification](2))
+      val mergeWithActorHook = b.add(Merge[ReceivedNotification](2))
+      val mergeWithDao = b.add(Merge[Notification](2))
       val sink = Sink.actorRef(scheduler, Done)
 
-      source.source() ~> streamingDao.persistFlow ~> merger
-      streamingDao.persistedSource ~> merger
+      actorRef ~> mergeWithActorHook
+      source.source() ~> mergeWithActorHook
 
-      merger ~> sink
+      mergeWithActorHook ~> streamingDao.persistFlow ~> mergeWithDao
+      streamingDao.persistedSource ~> mergeWithDao
+
+      mergeWithDao ~> sink
 
       ClosedShape
-    }
+    }}
 
     RunnableGraph.fromGraph(
       g.withAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))

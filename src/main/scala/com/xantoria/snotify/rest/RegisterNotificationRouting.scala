@@ -3,7 +3,7 @@ package com.xantoria.snotify.rest
 import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
-import akka.NotUsed
+import akka.actor.ActorRef
 import akka.http.scaladsl._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server._
@@ -22,14 +22,14 @@ import Directives._
 trait RegisterNotificationRouting extends SprayJsonSupport with StrictLogging {
   protected implicit val materializer: Materializer
 
-  protected val notificationSink: Sink[ReceivedNotification, NotUsed]
+  protected val notificationSink: ActorRef
 
   protected lazy val registrationRoutes: Route = pathPrefix("notification") {
     pathEndOrSingleSlash {
       post {
         entity(as[Notification]) { n =>
           val wrapped = RestNotification(n)
-          Source.single(wrapped).runWith(notificationSink)
+          notificationSink ! wrapped
 
           onComplete(wrapped.result) {
             case Success(_) => complete(200 -> "OK")
