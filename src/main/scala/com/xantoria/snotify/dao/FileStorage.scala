@@ -64,23 +64,33 @@ class FileStorage extends Persistence with StrictLogging {
   private def createFilename(n: Notification): String = s"${n.id}.json"
 
   /**
+   * Check if the given filename exists in complete or error dirs
+   *
+   * Used to prevent writing a fresh notification with the ID of a completed one
+   */
+  private def isComplete(filename: String): Boolean = {
+    new File(completedPath, filename).isFile || new File(failedPath, filename).isFile
+  }
+
+  /**
    * Save the given notification to a new file
    *
    * @throws NotificationConflict if a file already exists with this notification ID
    */
   override def save(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = Future {
     val fn = createFilename(n)
-    logger.info(s"Writing $fn")
-
     val f = new File(path, fn)
-    if (f.exists) {
-      throw new Persistence.NotificationConflict(n.id)
-    }
 
-    val data = n.toJson.compactPrint
-    val out = new BufferedWriter(new FileWriter(f))
-    out.write(data)
-    out.close()
+    if (!isComplete(fn)) {
+      logger.info(s"Writing $fn")
+
+      val data = n.toJson.compactPrint
+      val out = new BufferedWriter(new FileWriter(f))
+      out.write(data)
+      out.close()
+    } else {
+      logger.warn(s"Received notification ${n.id} but already marked as complete")
+    }
   }
 
   /**

@@ -53,9 +53,3 @@ trait Persistence extends StrictLogging {
     }
   }
 }
-
-object Persistence {
-  class NotificationConflict(id: String) extends IllegalStateException(
-    s"The notification $id has already been saved"
-  )
-}
