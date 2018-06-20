@@ -13,6 +13,8 @@ import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.Notification
 import com.xantoria.snotify.serialisation.JsonProtocol._
 
+import Persistence._
+
 /**
  * Basic filesystem storage for notifications
  *
@@ -77,19 +79,24 @@ class FileStorage extends Persistence with StrictLogging {
    *
    * @throws NotificationConflict if a file already exists with this notification ID
    */
-  override def save(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = Future {
+  override def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult] = Future {
     val fn = createFilename(n)
     val f = new File(path, fn)
 
     if (!isComplete(fn)) {
       logger.info(s"Writing $fn")
 
+      val res = if (f.exists) Updated else Inserted
+
       val data = n.toJson.compactPrint
       val out = new BufferedWriter(new FileWriter(f))
       out.write(data)
       out.close()
+
+      res
     } else {
       logger.warn(s"Received notification ${n.id} but already marked as complete")
+      Ignored
     }
   }
 

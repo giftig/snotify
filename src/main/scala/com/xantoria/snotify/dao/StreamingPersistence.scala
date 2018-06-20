@@ -23,6 +23,8 @@ trait StreamingPersistence {
    * A flow accepting notifications; persists them and feeds back state via ReceivedNotification
    */
   def persistFlow: Flow[ReceivedNotification, Notification, NotUsed] = {
-    Flow[ReceivedNotification].mapAsync(persistThreads) { underlying.save(_) }
+    Flow[ReceivedNotification].mapAsync(persistThreads) { underlying.save(_) } collect {
+      case Some(n) => n
+    }
   }
 }

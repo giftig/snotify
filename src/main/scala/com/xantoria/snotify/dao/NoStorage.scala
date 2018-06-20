@@ -16,12 +16,14 @@ import com.xantoria.snotify.model.Notification
  *              short-term notifications and don't care if you miss some.
  */
 class NoStorage extends Persistence with StrictLogging {
+  import Persistence._
+
   /**
-   * Noop; always return successfully
+   * Noop; always return successfully and indicate that the notification was new
    */
-  override def save(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
+  override def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult] = {
     logger.warn(s"Did not persist notification ${n.id}")
-    Future.unit
+    Future.successful(Inserted)
   }
 
   /**
@@ -39,7 +41,7 @@ class NoStorage extends Persistence with StrictLogging {
   }
 
   /**
-   * Noop; always return successfully
+   * Noop; always return successfully and indicate that the notification was new
    */
   override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
     Future.unit

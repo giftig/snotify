@@ -1,6 +1,7 @@
 package com.xantoria.snotify.dao
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 import com.typesafe.scalalogging.StrictLogging
@@ -11,10 +12,12 @@ import com.xantoria.snotify.model.{Notification, ReceivedNotification}
  * Defines the basic operations required to persist and fetch notifications for scheduling
  */
 trait Persistence extends StrictLogging {
+  import Persistence._
+
   /**
    * Persist a notification to be delivered later
    */
-  def save(n: Notification)(implicit ec: ExecutionContext): Future[Unit]
+  def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult]
 
   /**
    * Find notifications which are not yet complete
@@ -36,20 +39,43 @@ trait Persistence extends StrictLogging {
    *
    * Strips the notifications down to the raw `Notification` for convenience as the wrapper is no
    * longer needed once it's been persisted
+   *
+   * @returns The notification if it's been written for the first time; None otherwise (indicating
+   *          that the notification does not need to be handled again)
    */
-  def save(rn: ReceivedNotification)(implicit ec: ExecutionContext): Future[Notification] = try {
-    // TODO: Refactor this into the underlying Persistence as a util method?
-    val saved: Future[Unit] = save(rn.notification)
-    saved foreach { _ =>
-      logger.info(s"Successfully wrote $rn")
-      rn.ack()
+  def save(rn: ReceivedNotification)(
+    implicit ec: ExecutionContext
+  ): Future[Option[Notification]] = {
+    val saved: Future[WriteResult] = save(rn.notification)
+
+    // Due to the ReceivedNotification API, acking / rejecting notifications is a side-effect sadly
+    saved onComplete {
+      case Success(Inserted) | Success(Updated) => {
+        logger.info(s"Successfully wrote $rn")
+        rn.ack()
+      }
+      case Success(Ignored) => {
+        logger.info(s"Acknowledged $rn but did not overwrite existing notification")
+        rn.ack()
+      }
+      case Failure(NonFatal(t)) => {
+        logger.error(s"Unexpected error persisting $rn", t)
+        rn.retry()
+      }
     }
-    saved map { _ => rn.notification }
-  } catch {
-    case NonFatal(t) => {
-      logger.error(s"Unexpected error persisting $rn", t)
-      rn.retry()
-      throw t
+
+    saved map {
+      case Inserted => Some(rn.notification)
+      case _ => None
+    } recover {
+      case NonFatal(t) => None
     }
   }
+}
+
+object Persistence {
+  sealed trait WriteResult
+  case object Inserted extends WriteResult
+  case object Updated extends WriteResult
+  case object Ignored extends WriteResult
 }
