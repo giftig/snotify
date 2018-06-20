@@ -1,0 +1,8 @@
+{
+  "id": "future-notification",
+  "title": "This notification was submitted with no ID",
+  "body": "This is schedule for a considerable distance into the future",
+  "trigger_time": "2080-01-01 00:00:00",
+  "targets": ["dev1", "dev2", "dev3"],
+  "source": "rest_api"
+}

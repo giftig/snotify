@@ -1,0 +1,7 @@
+{
+  "title": "Test Notification without ID",
+  "body": "This notification was submitted with no ID",
+  "trigger_time": "2018-01-01 00:00:00",
+  "targets": ["dev1", "dev2", "dev3"],
+  "source": "rest_api"
+}
