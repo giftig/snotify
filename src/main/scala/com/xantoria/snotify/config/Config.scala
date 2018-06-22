@@ -1,14 +1,23 @@
 package com.xantoria.snotify.config
 
+import java.io.File
 import scala.collection.JavaConverters._
 
 import com.typesafe.config.{Config => TConfig, ConfigFactory}
+import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.backoff.BackoffStrategy
 
-object Config {
+object Config extends StrictLogging {
   import ConfigHelpers._
-  private val cfg: TConfig = ConfigFactory.load()
+  private val cfg: TConfig = {
+    val default = ConfigFactory.load()
+
+    Option(System.getProperty("app.config")) map { configFile =>
+      logger.info(s"Using config from file $configFile")
+      ConfigFactory.parseFile(new File(configFile)).withFallback(default)
+    } getOrElse default
+  }
   private val amq: TConfig = cfg.getConfig("amq")
   private val persist: TConfig = cfg.getConfig("persist")
   private val rest: TConfig = cfg.getConfig("rest")

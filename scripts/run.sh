@@ -18,6 +18,11 @@ ID_ARG=''
 
 while [[ "$1" != '' ]]; do
   case "$1" in
+    --config|--cfg|-c)
+      shift
+      CONFIG_ARG="-Dapp.config=$1"
+      shift
+      ;;
     --port|-p)
       shift
       PORT_ARG="-Drest.port=$1"
@@ -35,6 +40,6 @@ while [[ "$1" != '' ]]; do
   esac
 done
 
-JVM_ARGS="$PORT_ARG $ID_ARG"
+JVM_ARGS="$PORT_ARG $ID_ARG $CONFIG_ARG"
 
 java $JVM_ARGS -jar "$JARFILE"
