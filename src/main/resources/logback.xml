@@ -6,9 +6,9 @@
     </encoder>
   </appender>
 
-  <logger name="akka" level="WARN"/>
-  <logger name="com.xantoria" level="INFO"/>
-  <logger name="main" level="INFO"/>
+  <logger name="akka" level="${logback.levels.akka:-WARN}"/>
+  <logger name="com.xantoria" level="${logback.levels.xantoria:-INFO}"/>
+  <logger name="main" level="${logback.levels.main:-INFO}"/>
 
   <root level="debug"><appender-ref ref="STDOUT"/></root>
 </configuration>

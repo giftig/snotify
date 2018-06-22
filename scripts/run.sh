@@ -1,10 +1,12 @@
 #!/bin/bash
 # Quick wrapper for running with some easy arguments
 usage() {
-  echo 'run.sh [--port PORT] [--id ID]'
+  echo 'run.sh [--port PORT] [--id ID] [--config CONFIG] [--debug]'
   echo ''
   echo -e 'PORT\tThe port to serve the REST interface on'
   echo -e 'ID\tThe client-id to use'
+  echo -e 'CONFIG\tThe config file to use to override defaults'
+  echo -e '--debug\tSet primary log levels to DEBUG'
 }
 
 SCALA_VERSION='2.12'
@@ -33,6 +35,10 @@ while [[ "$1" != '' ]]; do
       ID_ARG="-Dclient-id=$1"
       shift
       ;;
+    --debug)
+      shift
+      DEBUG_ARG='-Dlogback.levels.xantoria=DEBUG -Dlogback.levels.main=DEBUG'
+      ;;
     *)
       usage
       exit 1
@@ -40,6 +46,6 @@ while [[ "$1" != '' ]]; do
   esac
 done
 
-JVM_ARGS="$PORT_ARG $ID_ARG $CONFIG_ARG"
+JVM_ARGS="$PORT_ARG $ID_ARG $CONFIG_ARG $DEBUG_ARG"
 
 java $JVM_ARGS -jar "$JARFILE"
