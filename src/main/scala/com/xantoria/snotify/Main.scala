@@ -29,25 +29,32 @@ object Main extends StrictLogging {
   // TODO: May need to connect to multiple hosts depending on the cluster
   private lazy val amqpConn = AMQPConnectionMgmt.connection(Config.amqInterface)
 
-  private lazy val clusterHandler: NotificationSource[ReceivedNotification] = {
+  // Route all configured notification sources into the cluster handler first
+  private lazy val clusterHandler: ClusterHandling[ReceivedNotification] = {
     val outputQueues = Config.peerQueues.toList map { case (pid, queueName) =>
       val q = Queue(queueName)
       val writer = new AMQPWriter(amqpConn, q)
       new TargetedWriter(writer, Set(pid))
     }
+    val clusterQueue = new AMQPReader(
+      amqpConn,
+      Queue(Config.clusterInputQueue),
+      Config.amqInputBufferSize
+    )
 
     new ClusterHandler(
-      new AMQPReader(amqpConn, Queue(Config.inputQueue), Config.amqInputBufferSize),
-      new AMQPReader(amqpConn, Queue(Config.clusterInputQueue), Config.amqInputBufferSize),
+      new NotificationSourceMerger(clusterQueue +: NotificationSource.configuredReaders),
       new NotificationSinkMerger(outputQueues),
       Config.clientId,
       Config.peerIds.toSet
     )
   }
 
-  private lazy val allSources: NotificationSource[ReceivedNotification] = {
-    new NotificationSourceMerger(clusterHandler +: NotificationSource.configuredReaders)
-  }
+  private lazy val personalQueue: NotificationSource[ReceivedNotification] = new AMQPReader(
+    amqpConn,
+    Queue(Config.inputQueue),
+    Config.amqInputBufferSize
+  )
 
   private def alertScheduler(dao: Persistence)(
     implicit system: ActorSystem, mat: Materializer
@@ -68,7 +75,7 @@ object Main extends StrictLogging {
     val scheduler = alertScheduler(notificationDao)
 
     // TODO: Graceful shutdown?
-    val streamingApp = new StreamingApp(scheduler, streamingDao, allSources)
+    val streamingApp = new StreamingApp(scheduler, streamingDao, clusterHandler, personalQueue)
     val notificationHook: ActorRef = streamingApp.run()
 
     val rest = new RestService(Config.restInterface, Config.restPort, notificationHook)

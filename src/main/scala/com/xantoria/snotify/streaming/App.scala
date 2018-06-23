@@ -11,7 +11,8 @@ import com.xantoria.snotify.model.ReceivedNotification
 class App(
   override protected val scheduler: ActorRef,
   override protected val streamingDao: StreamingPersistence,
-  override protected val source: NotificationSource[ReceivedNotification]
+  override protected val clusterSource: ClusterHandling[ReceivedNotification],
+  override protected val directSource: NotificationSource[ReceivedNotification]
 )(
   override protected implicit val actorSystem: ActorSystem,
   override protected implicit val mat: Materializer

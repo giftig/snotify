@@ -24,7 +24,9 @@ import com.xantoria.snotify.model.{Notification, ReceivedNotification}
  * the same streams to register single notifications when it receives requests.
  */
 trait NotificationStreaming {
-  protected val source: NotificationSource[ReceivedNotification]
+  protected val directSource: NotificationSource[ReceivedNotification]
+  protected val clusterSource: ClusterHandling[ReceivedNotification]
+
   protected val streamingDao: StreamingPersistence
   protected val scheduler: ActorRef
 
@@ -39,26 +41,24 @@ trait NotificationStreaming {
    * by materialising the graph as an ActorRef
    */
   protected val graph: RunnableGraph[ActorRef] = {
-    // TODO: configure
-    val actorRefHook = Source.actorRef[ReceivedNotification](100, OverflowStrategy.dropNew)
-
-    val g = GraphDSL.create(actorRefHook) { implicit b: GraphDSL.Builder[ActorRef] => actorRef => {
+    val c = clusterSource.source
+    val g = GraphDSL.create(c) { implicit b: GraphDSL.Builder[ActorRef] => cluster =>
       import GraphDSL.Implicits._
 
-      val mergeWithActorHook = b.add(Merge[ReceivedNotification](2))
+      val mergeClusterAndDirect = b.add(Merge[ReceivedNotification](2))
       val mergeWithDao = b.add(Merge[Notification](2))
       val sink = Sink.actorRef(scheduler, Done)
 
-      actorRef ~> mergeWithActorHook
-      source.source() ~> mergeWithActorHook
+      cluster ~> mergeClusterAndDirect
+      directSource.source() ~> mergeClusterAndDirect
 
-      mergeWithActorHook ~> streamingDao.persistFlow ~> mergeWithDao
+      mergeClusterAndDirect ~> streamingDao.persistFlow ~> mergeWithDao
       streamingDao.persistedSource ~> mergeWithDao
 
       mergeWithDao ~> sink
 
       ClosedShape
-    }}
+    }
 
     RunnableGraph.fromGraph(
       g.withAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))

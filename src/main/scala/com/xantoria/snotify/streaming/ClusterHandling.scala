@@ -1,6 +1,7 @@
 package com.xantoria.snotify.streaming
 
 import akka.NotUsed
+import akka.actor.ActorRef
 import akka.stream._
 import akka.stream.scaladsl._
 import com.typesafe.scalalogging.StrictLogging
@@ -24,41 +25,41 @@ import com.xantoria.snotify.model.{Notification, ReceivedNotification}
  *       and also place a copy of the message on the personal queue for each other member node)
  *     - If the target is unknown, the message will be rejected
  *
- * Though this is phrased in terms of queues, it's designed to be generic enough to accept generic
- * notification readers and writers, so it could just as well accept notifications via some other
- * mechanic if desired.
+ * The ClusterHandling trait will deal with reading any notifications which should be considered
+ * for possible redirection throughout the cluster - in practice that should mean anything that
+ * hasn't been delivered to the personal queue, or otherwise marked as being for this node only.
  */
 trait ClusterHandling[T <: ReceivedNotification]
-  extends NotificationSource[T]
-  with IncomingTargetResolution[T]
+  extends IncomingTargetResolution[T] // TODO: Consider composing instead?
   with StrictLogging {
 
-  protected val personalReader: NotificationSource[T]
-  protected val clusterReader: NotificationSource[T]
+  protected val notificationSource: NotificationSource[T]
   protected val notificationWriter: NotificationWriting
 
   private val errorSink: Sink[T, _] = Sink.foreach {
     n: T => logger.error(s"$n contained an unidentified target")
   }
 
-  override def source(): Source[T, NotUsed] = {
-    val g = GraphDSL.create() { implicit b =>
+  val source: Source[T, ActorRef] = {
+    // TODO: configure
+    val actorRefHook = Source.actorRef[T](100, OverflowStrategy.dropNew)
+
+    val g = GraphDSL.create(actorRefHook) { implicit b: GraphDSL.Builder[ActorRef] => actorRef =>
       import GraphDSL.Implicits._
 
       val merger = b.add(Merge[T](2))
       val resolver = b.add(targetResolverShape)
-      val cluster = clusterReader.source()
-      val personal = personalReader.source()
-      val unwrapNotification = Flow[ReceivedNotification].map { n => n.notification}
+      val src = notificationSource.source()
+      val unwrapNotification = Flow[T].map { _.notification }
 
-      cluster ~> resolver
-      resolver ~> merger
-      resolver ~> unwrapNotification ~> notificationWriter.sink
-      resolver ~> errorSink
+      actorRef ~> merger
+      src ~> merger
 
-      personal ~> merger
+      merger ~> resolver
+      resolver.out(1) ~> unwrapNotification ~> notificationWriter.sink
+      resolver.out(2) ~> errorSink
 
-      SourceShape(merger.out)
+      SourceShape(resolver.out(0))
     }
 
     Source.fromGraph(g)
