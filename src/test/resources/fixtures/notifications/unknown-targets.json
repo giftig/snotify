@@ -1,0 +1,8 @@
+{
+  "id": "unknown1",
+  "title": "Test Notification for unknwon target",
+  "body": "This should not be delivered to anyone",
+  "trigger_time": "2018-01-01 00:00:00",
+  "targets": ["unknown1", "unknown2"],
+  "source": "rest_api"
+}

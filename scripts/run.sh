@@ -16,7 +16,8 @@ JARFILE="target/scala-$SCALA_VERSION/$APP-assembly-$VERSION.jar"
 
 PORT_ARG=''
 ID_ARG=''
-
+CONFIG_ARG=''
+DEBUG_ARG=''
 
 while [[ "$1" != '' ]]; do
   case "$1" in
