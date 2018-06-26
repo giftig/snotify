@@ -2,6 +2,7 @@ package com.xantoria.snotify.dao
 
 import scala.concurrent.{ExecutionContext, Future}
 
+import com.typesafe.config.{Config => TConfig}
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.model.Notification
@@ -15,7 +16,7 @@ import com.xantoria.snotify.model.Notification
  * **WARNING**: This is likely only to be useful for testing purposes, unless you only use
  *              short-term notifications and don't care if you miss some.
  */
-class NoStorage extends Persistence with StrictLogging {
+class NoStorage(cfg: TConfig) extends Persistence with StrictLogging {
   import Persistence._
 
   /**

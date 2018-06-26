@@ -8,6 +8,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.alpakka.amqp.{QueueDeclaration => Queue}
 import akka.stream.alpakka.amqp.scaladsl.CommittableIncomingMessage
 import akka.stream.scaladsl.Sink
+import com.typesafe.config.{Config => TConfig}
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.alert._
@@ -19,11 +20,15 @@ import com.xantoria.snotify.rest.{Service => RestService}
 import com.xantoria.snotify.streaming.{App => StreamingApp, _}
 
 object Main extends StrictLogging {
-  private lazy val notificationDao: Persistence = Config.persistHandler.newInstance match {
-    case p: Persistence => p
-    case _ => throw new IllegalArgumentException(
-      s"Bad persistence class ${Config.persistHandler.getName}"
-    )
+  private lazy val notificationDao: Persistence = {
+    val constructor = Config.persistHandler.getConstructor(classOf[TConfig])
+
+    constructor.newInstance(Config.persistConfig) match {
+      case p: Persistence => p
+      case _ => throw new IllegalArgumentException(
+        s"Bad persistence class ${Config.persistHandler.getName}"
+      )
+    }
   }
 
   // TODO: May need to connect to multiple hosts depending on the cluster

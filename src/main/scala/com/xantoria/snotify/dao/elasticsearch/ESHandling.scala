@@ -3,7 +3,6 @@ package com.xantoria.snotify.dao.elasticsearch
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Left, Right}
 
-import com.sksamuel.elastic4s.ElasticsearchClientUri
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.HttpClient
 import com.typesafe.scalalogging.StrictLogging
