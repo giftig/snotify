@@ -13,10 +13,12 @@ object Config extends StrictLogging {
   private val cfg: TConfig = {
     val default = ConfigFactory.load()
 
-    Option(System.getProperty("app.config")) map { configFile =>
+    val merged = Option(System.getProperty("app.config")) map { configFile =>
       logger.info(s"Using config from file $configFile")
       ConfigFactory.parseFile(new File(configFile)).withFallback(default)
     } getOrElse default
+
+    merged.resolve()
   }
   private val amq: TConfig = cfg.getConfig("amq")
   private val persist: TConfig = cfg.getConfig("persist")
