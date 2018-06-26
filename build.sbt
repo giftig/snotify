@@ -1,6 +1,6 @@
 val akkaHttpVersion = "10.1.1"
 
-lazy val deps = Seq(
+lazy val coreDeps = Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.18",
   "com.typesafe" % "config" % "1.3.3",
@@ -11,13 +11,20 @@ lazy val deps = Seq(
   "joda-time" % "joda-time" % "2.9.9"
 )
 
+lazy val elasticsearchDeps = Seq(
+  "com.sksamuel.elastic4s" %% "elastic4s-core" % "6.2.9",
+  "com.sksamuel.elastic4s" %% "elastic4s-http" % "6.2.9"
+)
+
+lazy val allDeps = coreDeps ++ elasticsearchDeps
+
 lazy val root = (project in file(".")).settings(
   name := "Snotify",
   organization := "com.xantoria",
   version := "0.0.1-SNAPSHOT",
   scalaVersion := "2.12.4",
   mainClass in Compile := Some("com.xantoria.snotify.Main"),
-  libraryDependencies ++= deps,
+  libraryDependencies ++= allDeps,
   retrieveManaged := true,
   scalacOptions := Seq("-unchecked", "-deprecation")
 )
