@@ -64,18 +64,24 @@ trait ESHandling extends Persistence with StrictLogging {
    * Mark the specified notification as complete
    */
   override def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.unit
+    val q = updateById(indexName, NotificationType, n.id).script(MarkCompleteScript)
+
+    client.execute(q) map {
+      case Right(_) => ()
+      case Left(failure) => throw new RuntimeException(failure.toString)  // FIXME
+    }
   }
 
   /**
    * Mark the specified notification as undeliverable
    */
-  override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.unit
-  }
+  override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = ???
 }
 
 object ESHandling {
   val NotificationType: String = "notification"
   val IndexAlreadyExistsException: String = "index_already_exists_exception"
+
+  // Script used with the update API to mark a notification complete
+  val MarkCompleteScript = "ctx._source.complete = true"
 }
