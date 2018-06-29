@@ -4,10 +4,19 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - 5672:5672
-      - 15672:15672
+      - ${SNOTIFY_RABBIT_API_PORT}:5672
+      - ${SNOTIFY_RABBIT_ADMIN_PORT}:15672
 
   elasticsearch:
     image: elasticsearch:latest
     ports:
       - ${SNOTIFY_ES_HTTP_PORT}:9200
+
+  kibana:
+    image: kibana:latest
+    ports:
+      - ${SNOTIFY_KIBANA_PORT}:5601
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200/
+    depends_on:
+      - elasticsearch
