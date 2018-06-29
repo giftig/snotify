@@ -5,7 +5,7 @@ import scala.util.{Left, Right}
 
 import com.sksamuel.elastic4s.UnparsedElasticDate
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.{HttpClient, RequestFailure}
+import com.sksamuel.elastic4s.http.{HttpClient, RequestFailure, RequestSuccess}
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.dao.Persistence
@@ -37,10 +37,7 @@ trait ESHandling extends Persistence with StrictLogging {
 
   override def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult] = {
     val q = indexInto(indexName / NotificationType).doc(n).id(n.id)
-    client.execute(q) map {
-      case Right(_) => Inserted
-      case Left(failure) => throw new RuntimeException(failure.toString)  // FIXME
-    }
+    mapResponse(client.execute(q)) { _ => Inserted }
   }
 
   /**
@@ -54,10 +51,7 @@ trait ESHandling extends Persistence with StrictLogging {
       )
     }
 
-    client.execute(q) map {
-      case Right(res) => res.result.hits.hits map { _.to[Notification] }
-      case Left(failure) => throw new RuntimeException(failure.toString)  // FIXME
-    }
+    mapResponse(client.execute(q)) { res => res.result.hits.hits map { _.to[Notification] } }
   }
 
   /**
@@ -66,10 +60,7 @@ trait ESHandling extends Persistence with StrictLogging {
   override def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
     val q = updateById(indexName, NotificationType, n.id).script(MarkCompleteScript)
 
-    client.execute(q) map {
-      case Right(_) => ()
-      case Left(failure) => throw new RuntimeException(failure.toString)  // FIXME
-    }
+    mapResponse(client.execute(q)) { _ => () }
   }
 
   /**
@@ -84,4 +75,18 @@ object ESHandling {
 
   // Script used with the update API to mark a notification complete
   val MarkCompleteScript = "ctx._source.complete = true"
+
+  private class ElasticsearchException(f: RequestFailure) extends RuntimeException(
+    s"Elasticsearch request failed: ${f.error}"
+  )
+
+  /**
+   * Convenience method to take the elasticsearch response (from client.execute) and map a success
+   */
+  def mapResponse[T, U](
+    res: Future[Either[RequestFailure, RequestSuccess[U]]]
+  )(f: RequestSuccess[U] => T)(implicit ec: ExecutionContext): Future[T] = res map {
+    case Right(success) => f(success)
+    case Left(failure) => throw new ElasticsearchException(failure)
+  }
 }
