@@ -1,5 +1,7 @@
 package com.xantoria.snotify
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 import akka.{Done, NotUsed}
@@ -75,6 +77,9 @@ object Main extends StrictLogging {
     implicit val mat = ActorMaterializer()
 
     import system.dispatcher
+
+    // Block until the db is ready; we can't do anything until then anyway
+    Await.result(notificationDao.init(), 30.seconds)
 
     val streamingDao = new StreamingDao(notificationDao, Config.persistThreads)
     val scheduler = alertScheduler(notificationDao)

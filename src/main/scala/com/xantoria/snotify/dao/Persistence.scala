@@ -15,6 +15,18 @@ trait Persistence extends StrictLogging {
   import Persistence._
 
   /**
+   * Perform steps needed to boot strap the db for the first time if appropriate
+   *
+   * This may include creating tables or indexes, or anything else required to bootstrap the
+   * backend from a fresh instance. It *must* be idempotent and must handle any initialisation
+   * issues as gracefully as possible. It will be called on service startup.
+   *
+   * The default implementation is a noop, so subclasses don't have to implement if if they don't
+   * need it.
+   */
+  def init()(implicit ec: ExecutionContext): Future[Unit] = Future.unit
+
+  /**
    * Persist a notification to be delivered later
    */
   def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult]

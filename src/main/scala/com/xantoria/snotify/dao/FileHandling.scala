@@ -28,20 +28,15 @@ import Persistence._
 trait FileHandling extends Persistence with StrictLogging {
   protected val cfg: TConfig
 
-  private val path: File = {
-    val f = new File(cfg.getString("path"))
-    ensureDirExists(f)
-    f
-  }
-  private val completedPath: File = {
-    val f = new File(path, "complete")
-    ensureDirExists(f)
-    f
-  }
-  private val failedPath: File = {
-    val f = new File(path, "failed")
-    ensureDirExists(f)
-    f
+  private val path: File = new File(cfg.getString("path"))
+  private val completedPath: File = new File(path, "complete")
+  private val failedPath: File = new File(path, "failed")
+
+  /**
+   * Ensure the directories required by the file handling system exist
+   */
+  override def init()(implicit ec: ExecutionContext): Future[Unit] = Future {
+    Seq(path, completedPath, failedPath) foreach ensureDirExists
   }
 
   /**

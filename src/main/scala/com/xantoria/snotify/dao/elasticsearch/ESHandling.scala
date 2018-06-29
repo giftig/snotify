@@ -4,7 +4,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Left, Right}
 
 import com.sksamuel.elastic4s.http.ElasticDsl._
-import com.sksamuel.elastic4s.http.HttpClient
+import com.sksamuel.elastic4s.http.{HttpClient, RequestFailure}
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.dao.Persistence
@@ -22,10 +22,16 @@ trait ESHandling extends Persistence with StrictLogging {
   /**
    * Ensure the appropriate index gets created if necessary
    */
-  protected def bootstrap()(implicit ec: ExecutionContext): Future[Unit] = {
-    val q = createIndex(indexName)
+  override def init()(implicit ec: ExecutionContext): Future[Unit] = {
+    val q = createIndex(indexName).mappings(Mappings.Notification)
     val res = client.execute(q)
-    res map { _ => () } // TODO: recover conflicts etc
+    res map {
+      case Right(_) => ()
+      case Left(f) if f.error.`type` == IndexAlreadyExistsException => ()
+      case Left(f) => throw new IllegalStateException(
+        s"Unexpected error initialising elasticsearch: ${f.error}"
+      )
+    }
   }
 
   override def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult] = {
@@ -39,19 +45,27 @@ trait ESHandling extends Persistence with StrictLogging {
   /**
    * Find notifications which are not yet complete
    */
-  override def findPending()(implicit ec: ExecutionContext): Future[Seq[Notification]] = ???
+  override def findPending()(implicit ec: ExecutionContext): Future[Seq[Notification]] = {
+    Future.successful(Nil)
+    // FIXME: Missing implementations here
+  }
 
   /**
    * Mark the specified notification as complete
    */
-  override def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = ???
+  override def markComplete(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
+    Future.unit
+  }
 
   /**
    * Mark the specified notification as undeliverable
    */
-  override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = ???
+  override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
+    Future.unit
+  }
 }
 
 object ESHandling {
   val NotificationType: String = "notification"
+  val IndexAlreadyExistsException: String = "index_already_exists_exception"
 }

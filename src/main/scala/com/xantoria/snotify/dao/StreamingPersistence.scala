@@ -7,6 +7,8 @@ import akka.stream.scaladsl._
 
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
 
+// TODO: make a streaming API the default API; this is going to be much better for findPending()
+// especially, for example
 trait StreamingPersistence {
   protected implicit val ec: ExecutionContext
   protected val persistThreads: Int
