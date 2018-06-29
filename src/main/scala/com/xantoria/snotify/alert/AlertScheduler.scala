@@ -6,6 +6,7 @@ import scala.util.control.NonFatal
 
 import akka.actor._
 import com.typesafe.scalalogging.StrictLogging
+import org.joda.time.DateTime
 
 import com.xantoria.snotify.backoff.{BackoffStrategy, ExponentialBackoffStrategy}
 import com.xantoria.snotify.dao.Persistence
@@ -46,11 +47,15 @@ trait AlertScheduling extends StrictLogging {
   }
 
   protected def scheduleNotification(n: Notification): Unit = {
-    context.system.scheduler.scheduleOnce(
-      TimeUtils.timeUntil(n.triggerTime),
-      self,
-      TriggerAlert(n)
-    )
+    if (isSoonEnough(n)) {
+      context.system.scheduler.scheduleOnce(
+        TimeUtils.timeUntil(n.triggerTime),
+        self,
+        TriggerAlert(n)
+      )
+    } else {
+      logger.info(s"Not scheduling delivery of notification ${n.id} yet; saving for later")
+    }
   }
 
   /**
@@ -72,6 +77,19 @@ trait AlertScheduling extends StrictLogging {
 
 object AlertScheduling {
   case class TriggerAlert(n: Notification, attempt: Int = 0)
+
+  /**
+   * Determine whether the given notification will be triggered "soon"
+   *
+   * Soon is an arbitrary period but essentially defines how long we're willing to have a
+   * notification in memory awaiting an alert rather than leaving it in the db and picking it up
+   * later.
+   */
+  def isSoonEnough(n: Notification): Boolean = {
+    val threshold = 3.days.toMillis  // TODO: Configurable, based on a db re-read interval?
+    val diff = DateTime.now.getMillis - n.triggerTime.getMillis
+    diff < threshold
+  }
 }
 
 class AlertScheduler(
@@ -82,7 +100,6 @@ class AlertScheduler(
   import AlertScheduling._
 
   def receive: Receive = {
-    // TODO: Consider akka-quartz-scheduler
     case n: Notification => scheduleNotification(n)
     case TriggerAlert(n: Notification, attempt: Int) => triggerAlert(n, attempt)
   }
