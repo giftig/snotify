@@ -46,7 +46,7 @@ trait ESHandling extends Persistence with StrictLogging {
   override def findPending()(implicit ec: ExecutionContext): Future[Seq[Notification]] = {
     val q = searchWithType(indexName -> NotificationType) bool {
       must(
-        rangeQuery("trigger_time") lte UnparsedElasticDate("now"),
+        rangeQuery("trigger_time") lte UnparsedElasticDate("now + 1w"),
         termQuery("complete", false)
       )
     }
