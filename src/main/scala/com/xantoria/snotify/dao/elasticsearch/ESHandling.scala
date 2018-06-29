@@ -41,7 +41,7 @@ trait ESHandling extends Persistence with StrictLogging {
   }
 
   /**
-   * Find notifications which are not yet complete
+   * Find notifications which are not yet complete and trigger in the next week
    */
   override def findPending()(implicit ec: ExecutionContext): Future[Seq[Notification]] = {
     val q = searchWithType(indexName -> NotificationType) bool {
