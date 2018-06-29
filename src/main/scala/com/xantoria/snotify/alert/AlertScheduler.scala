@@ -14,7 +14,8 @@ import com.xantoria.snotify.model.Notification
 import com.xantoria.snotify.utils.{Time => TimeUtils}
 
 trait AlertScheduling extends StrictLogging {
-  _: Actor =>
+  implicit val context: ActorContext
+  protected val alertTarget: ActorRef
 
   import AlertScheduling._
   import context.dispatcher
@@ -50,7 +51,7 @@ trait AlertScheduling extends StrictLogging {
     if (isSoonEnough(n)) {
       context.system.scheduler.scheduleOnce(
         TimeUtils.timeUntil(n.triggerTime),
-        self,
+        alertTarget,
         TriggerAlert(n)
       )
     } else {
@@ -66,7 +67,7 @@ trait AlertScheduling extends StrictLogging {
   protected def rescheduleNotification(n: Notification, attempt: Int = 1): Boolean = {
     backoffStrategy.delay(attempt) map { d =>
       logger.info(s"Triggering redelivery of notification ${n.id} in $d")
-      context.system.scheduler.scheduleOnce(d, self, TriggerAlert(n, attempt))
+      context.system.scheduler.scheduleOnce(d, alertTarget, TriggerAlert(n, attempt))
       true
     } getOrElse {
       logger.warn(s"Not rescheduling delivery of notification ${n.id} after attempt $attempt")
@@ -98,6 +99,7 @@ class AlertScheduler(
   override protected val backoffStrategy: BackoffStrategy = new ExponentialBackoffStrategy()
 ) extends Actor with AlertScheduling {
   import AlertScheduling._
+  override protected val alertTarget = self
 
   def receive: Receive = {
     case n: Notification => scheduleNotification(n)
