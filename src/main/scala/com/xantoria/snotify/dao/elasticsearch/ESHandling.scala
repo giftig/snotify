@@ -50,7 +50,7 @@ trait ESHandling extends Persistence with StrictLogging {
     val q = searchWithType(indexName -> NotificationType) bool {
       must(
         rangeQuery("trigger_time") lte UnparsedElasticDate("now"),
-        termQuery("completed", false)
+        termQuery("complete", false)
       )
     }
 
