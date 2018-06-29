@@ -3,6 +3,7 @@ package com.xantoria.snotify.dao.elasticsearch
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Left, Right}
 
+import com.sksamuel.elastic4s.UnparsedElasticDate
 import com.sksamuel.elastic4s.http.ElasticDsl._
 import com.sksamuel.elastic4s.http.{HttpClient, RequestFailure}
 import com.typesafe.scalalogging.StrictLogging
@@ -38,7 +39,7 @@ trait ESHandling extends Persistence with StrictLogging {
     val q = indexInto(indexName / NotificationType).doc(n).id(n.id)
     client.execute(q) map {
       case Right(_) => Inserted
-      case Left(failure) => throw new RuntimeException(failure.toString) // FIXME
+      case Left(failure) => throw new RuntimeException(failure.toString)  // FIXME
     }
   }
 
@@ -46,8 +47,17 @@ trait ESHandling extends Persistence with StrictLogging {
    * Find notifications which are not yet complete
    */
   override def findPending()(implicit ec: ExecutionContext): Future[Seq[Notification]] = {
-    Future.successful(Nil)
-    // FIXME: Missing implementations here
+    val q = searchWithType(indexName -> NotificationType) bool {
+      must(
+        rangeQuery("trigger_time") lte UnparsedElasticDate("now"),
+        termQuery("completed", false)
+      )
+    }
+
+    client.execute(q) map {
+      case Right(res) => res.result.hits.hits map { _.to[Notification] }
+      case Left(failure) => throw new RuntimeException(failure.toString)  // FIXME
+    }
   }
 
   /**

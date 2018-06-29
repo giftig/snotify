@@ -7,7 +7,7 @@ import spray.json._
 import com.xantoria.snotify.model.{Notification, Priority}
 
 object JsonProtocol extends DefaultJsonProtocol {
-  private val datePattern: String = "yyyy-MM-dd HH:mm:ss"
+  private val datePattern: String = "yyyy-MM-dd'T'HH:mm:ssZ"
   private val dateFormatter: DateTimeFormatter = DateTimeFormat.forPattern(datePattern)
 
   /**
