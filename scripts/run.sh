@@ -45,7 +45,6 @@ while [[ "$1" != '' ]]; do
       DEBUG_ARG='-Dlogback.levels.xantoria=DEBUG'
       ;;
     -D*)
-      shift
       EXTRA_ARGS="$EXTRA_ARGS $1"
       shift
       ;;
