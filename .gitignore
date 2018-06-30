@@ -3,6 +3,8 @@
 *.class
 *.pyc
 
+*.log
+
 /target
 /project/target
 /lib_managed

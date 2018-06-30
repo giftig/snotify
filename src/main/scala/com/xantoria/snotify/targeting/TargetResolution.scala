@@ -24,13 +24,6 @@ trait TargetResolution {
   protected def isSelf(n: Notification): Boolean = n.targets.map(identify).contains(Self)
   protected def isPeer(n: Notification): Boolean = n.targets.map(identify).contains(Peer)
   protected def isUnknown(n: Notification): Boolean = n.targets.map(identify).contains(Unknown)
-
-  /**
-   * Filter the notification's list of targets to those which correspond to known peers
-   */
-  protected def peerTargets(n: Notification): Seq[String] = {
-    n.targets collect { case t if identify(t) == Peer => t }
-  }
 }
 
 object TargetResolution {

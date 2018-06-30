@@ -6,9 +6,9 @@ import org.joda.time.DateTime
 import org.scalatest._
 import org.scalatest.matchers._
 
-import com.xantoria.snotify.AbstractSpec
+import com.xantoria.snotify.SpecKit
 
-class TimeSpec extends AbstractSpec {
+class TimeSpec extends SpecKit {
   import TimeSpec._
 
   "timeUntil" should "produce the correct durations" in {

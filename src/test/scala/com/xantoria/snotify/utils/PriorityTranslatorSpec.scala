@@ -1,8 +1,8 @@
 package com.xantoria.snotify.utils
 
-import com.xantoria.snotify.AbstractSpec
+import com.xantoria.snotify.SpecKit
 
-class PriorityTranslatorSpec extends AbstractSpec {
+class PriorityTranslatorSpec extends SpecKit {
   private val translator = new PriorityTranslator[String](Map(
     10 -> "low",
     25 -> "medium",

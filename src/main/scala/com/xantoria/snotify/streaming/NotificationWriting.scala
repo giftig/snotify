@@ -6,7 +6,6 @@ import akka.stream.alpakka.amqp.scaladsl._
 import akka.stream.scaladsl.Sink
 import com.typesafe.scalalogging.StrictLogging
 
-
 import com.xantoria.snotify.model.Notification
 
 trait NotificationWriting extends StrictLogging {

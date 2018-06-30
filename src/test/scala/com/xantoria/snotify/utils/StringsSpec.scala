@@ -1,8 +1,8 @@
 package com.xantoria.snotify.utils
 
-import com.xantoria.snotify.AbstractSpec
+import com.xantoria.snotify.SpecKit
 
-class StringsSpec extends AbstractSpec {
+class StringsSpec extends SpecKit {
   "Strings.truncate" should "leave a short string intact" in {
     val limit = 30
     val short = "s" * (limit - 1)
