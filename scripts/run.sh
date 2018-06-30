@@ -7,6 +7,9 @@ usage() {
   echo -e 'ID\tThe client-id to use'
   echo -e 'CONFIG\tThe config file to use to override defaults'
   echo -e '--debug\tSet primary log levels to DEBUG'
+  echo ''
+  echo 'Note that -D properties can also be passed directly to the script'
+  echo 'and will be passed through to the application as normal'
 }
 
 SCALA_VERSION='2.12'
@@ -18,6 +21,7 @@ PORT_ARG=''
 ID_ARG=''
 CONFIG_ARG=''
 DEBUG_ARG=''
+EXTRA_ARGS=''
 
 while [[ "$1" != '' ]]; do
   case "$1" in
@@ -38,7 +42,12 @@ while [[ "$1" != '' ]]; do
       ;;
     --debug)
       shift
-      DEBUG_ARG='-Dlogback.levels.xantoria=DEBUG -Dlogback.levels.main=DEBUG'
+      DEBUG_ARG='-Dlogback.levels.xantoria=DEBUG'
+      ;;
+    -D*)
+      shift
+      EXTRA_ARGS="$EXTRA_ARGS $1"
+      shift
       ;;
     *)
       usage
@@ -47,6 +56,6 @@ while [[ "$1" != '' ]]; do
   esac
 done
 
-JVM_ARGS="$PORT_ARG $ID_ARG $CONFIG_ARG $DEBUG_ARG"
+JVM_ARGS="$PORT_ARG $ID_ARG $CONFIG_ARG $DEBUG_ARG $EXTRA_ARGS"
 
 java $JVM_ARGS -jar "$JARFILE"
