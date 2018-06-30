@@ -88,7 +88,7 @@ object AlertScheduling {
    */
   def isSoonEnough(n: Notification): Boolean = {
     val threshold = 3.days.toMillis  // TODO: Configurable, based on a db re-read interval?
-    val diff = DateTime.now.getMillis - n.triggerTime.getMillis
+    val diff = n.triggerTime.getMillis - DateTime.now.getMillis
     diff < threshold
   }
 }
