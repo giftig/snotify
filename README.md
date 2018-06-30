@@ -5,10 +5,11 @@ notification messages from a rabbitmq queue and schedules various forms of alert
 to notify the recipients, eg. play a sound, use notify-send, push to a phone via the
 Pushover app, etc.
 
+The primary database supported right now is elasticsearch. Together with kibana, this makes it
+easy to search, graph, and analyse the notification history, and provides a nice scalable
+backend.
+
 ## TODO
-* Provide a proper database layer; file-based persistence is probably ok for basic use as a
-  desktop client, but a server will need a decent db
-* Add note searching capabilities backed by whatever database is used
 * Support google calendar integration as a notification source
 * Finish the cluster logic -- there are a couple of unhandled cases around acking messages
   when they've been passed on to peers only, and I need to ensure other suitable notification
