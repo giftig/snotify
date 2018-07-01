@@ -1,9 +1,12 @@
-val akkaHttpVersion = "10.1.1"
+val akkaCoreVersion = "2.5.13"
+val akkaHttpVersion = "10.1.3"
 
 val coreDeps = Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.18",
   "com.typesafe" % "config" % "1.3.3",
+  "com.typesafe.akka" %% "akka-actor" % akkaCoreVersion,
+  "com.typesafe.akka" %% "akka-stream" % akkaCoreVersion,
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
