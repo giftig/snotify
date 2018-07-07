@@ -53,7 +53,7 @@ trait NotificationStreaming {
       directSource.source() ~> mergeClusterAndDirect
 
       mergeClusterAndDirect ~> streamingDao.persistFlow ~> mergeWithDao
-      streamingDao.persistedSource ~> mergeWithDao
+      streamingDao.periodicSource ~> mergeWithDao
 
       mergeWithDao ~> sink
 

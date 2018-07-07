@@ -89,7 +89,11 @@ object Main extends StrictLogging {
     // Block until the db is ready; we can't do anything until then anyway
     Await.result(notificationDao.init(), 30.seconds)
 
-    val streamingDao = new StreamingDao(notificationDao, Config.persistThreads)
+    val streamingDao = new StreamingDao(
+      notificationDao,
+      Config.persistThreads,
+      Config.dbRefreshInterval
+    )
     val scheduler = alertScheduler(notificationDao)
 
     // TODO: Graceful shutdown?

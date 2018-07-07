@@ -48,6 +48,8 @@ trait ESHandling extends Persistence with StrictLogging {
    * Find notifications which are not yet complete and trigger in the next week
    */
   override def findPending()(implicit ec: ExecutionContext): Future[Seq[Notification]] = {
+    logger.info("Retrieving pending notifications from elasticsearch...")
+
     val q = searchWithType(indexName -> NotificationType) bool {
       must(
         rangeQuery("trigger_time") lte UnparsedElasticDate("now+1w"),

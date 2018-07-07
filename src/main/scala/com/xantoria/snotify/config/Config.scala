@@ -2,6 +2,7 @@ package com.xantoria.snotify.config
 
 import java.io.File
 import scala.collection.JavaConverters._
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 import com.typesafe.config.{Config => TConfig, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
@@ -67,6 +68,9 @@ object Config extends StrictLogging {
 
   val persistHandler: Class[_] = Class.forName(persist.getString("class"))
   val persistThreads: Int = persist.getInt("threads")
+  val dbRefreshInterval: Option[FiniteDuration] = if (persist.hasPath("refresh-interval")) {
+    Some(Duration.fromNanos(persist.getDuration("refresh-interval").toNanos))
+  } else None
   val persistConfig: TConfig = persist.getConfig("config")  // storage-specific config
 
   val alertingConfig: TConfig = cfg.getConfig("alerting")
