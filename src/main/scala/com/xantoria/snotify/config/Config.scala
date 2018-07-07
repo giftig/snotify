@@ -27,7 +27,16 @@ object Config extends StrictLogging {
 
   // Clustering / target resolution config
   val clientId = cfg.getString("client-id")
-  val peerIds: Set[String] = cfg.getStringList("cluster.peers").asScala.toSet
+
+  val peerIds: Set[String] = {
+    val values = cfg.getStringList("cluster.peers").asScala.toSet
+    if (values.contains(clientId)) {
+      throw new IllegalArgumentException("Cannot configure myself to be my own peer!")
+    }
+
+    values
+  }
+
   val targetGroups: Set[TargetGroup] = cfg.getConfigList("cluster.groups").asScala.toSet map {
     c: TConfig => c.toTargetGroup
   }
