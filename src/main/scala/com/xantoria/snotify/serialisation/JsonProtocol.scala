@@ -4,6 +4,8 @@ import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import spray.json._
 
+import com.xantoria.snotify.admin.ServiceInfo
+import com.xantoria.snotify.rest.{Utils => RestUtils}
 import com.xantoria.snotify.model.{Notification, Priority}
 
 object JsonProtocol extends DefaultJsonProtocol {
@@ -106,4 +108,7 @@ object JsonProtocol extends DefaultJsonProtocol {
       )
     }
   }
+
+  implicit val serviceInfoFmt = jsonFormat4(ServiceInfo)
+  implicit val basicResponseFmt = jsonFormat3(RestUtils.BasicResponse.apply)
 }

@@ -32,8 +32,8 @@ trait RegisterNotificationRouting extends SprayJsonSupport with StrictLogging {
           notificationSink ! wrapped
 
           onComplete(wrapped.result) {
-            case Success(_) => complete(200 -> "OK")
-            case Failure(NonFatal(e)) => complete(500 -> e.getMessage)
+            case Success(_) => complete(200 -> Utils.BasicResponse())
+            case Failure(NonFatal(e)) => complete(500 -> Utils.BasicResponse(e))
           }
         }
       }
