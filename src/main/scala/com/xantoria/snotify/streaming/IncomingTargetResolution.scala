@@ -3,6 +3,7 @@ package com.xantoria.snotify.streaming
 import akka.NotUsed
 import akka.stream._
 import akka.stream.scaladsl._
+import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.targeting.TargetResolution
@@ -10,7 +11,7 @@ import com.xantoria.snotify.targeting.TargetResolution
 /**
  * Defines graph shape(s) for dealing with targets in incoming messages
  */
-trait IncomingTargetResolution[T <: ReceivedNotification] {
+trait IncomingTargetResolution[T <: ReceivedNotification] extends StrictLogging {
   protected val resolver: TargetResolution
 
   /**
@@ -31,7 +32,15 @@ trait IncomingTargetResolution[T <: ReceivedNotification] {
       val bcast = b.add(Broadcast[T](outputPorts = 3))
 
       val forSelf = b.add(Flow[T].filter { n => resolver.isSelf(n.notification) })
-      val forPeer = b.add(Flow[T].filter { n => resolver.isPeer(n.notification) })
+      val forPeer = b.add {
+        Flow[T].filter { n => resolver.isPeer(n.notification) } map { n =>
+          if (!resolver.isSelf(n.notification)) {
+            logger.info(s"Acknowledged $n to be passed on to peer(s)")
+            n.ack()
+          }
+          n
+        }
+      }
       val unk = b.add(Flow[T].filter { n => resolver.isUnknown(n.notification) })
 
       input ~> bcast
