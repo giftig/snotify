@@ -7,9 +7,10 @@ object Mappings {
     keywordField("id"),
     textField("body"),
     textField("title"),
+    keywordField("targets"),
     dateField("trigger_time"),
     dateField("creation_time"),
-    textField("source"),
+    keywordField("source"),
     intField("priority"),
     booleanField("complete")
   )
