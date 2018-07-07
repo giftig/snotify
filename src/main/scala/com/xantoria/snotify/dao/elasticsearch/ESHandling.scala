@@ -36,8 +36,12 @@ trait ESHandling extends Persistence with StrictLogging {
   }
 
   override def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult] = {
-    val q = indexInto(indexName / NotificationType).doc(n).id(n.id)
-    mapResponse(client.execute(q)) { _ => Inserted }
+    val q = indexInto(indexName / NotificationType).createOnly(true).doc(n).id(n.id)
+    client.execute(q) map {
+      case Right(res) => Inserted
+      case Left(f) if f.error.`type` == VersionConflict => Ignored
+      case Left(f) => throw new ElasticsearchException(f)
+    }
   }
 
   /**
@@ -72,6 +76,7 @@ trait ESHandling extends Persistence with StrictLogging {
 object ESHandling {
   val NotificationType: String = "notification"
   val IndexAlreadyExistsException: String = "index_already_exists_exception"
+  val VersionConflict: String = "version_conflict_engine_exception"
 
   // Script used with the update API to mark a notification complete
   val MarkCompleteScript = "ctx._source.complete = true"
