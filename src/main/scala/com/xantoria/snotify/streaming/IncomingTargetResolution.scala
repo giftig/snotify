@@ -36,7 +36,7 @@ trait IncomingTargetResolution[T <: ReceivedNotification] extends StrictLogging 
         Flow[T].filter { n => resolver.isPeer(n.notification) } map { n =>
           if (!resolver.isSelf(n.notification)) {
             logger.info(s"Acknowledged $n to be passed on to peer(s)")
-            n.ack()
+            n.forwarded()
           }
           n
         }

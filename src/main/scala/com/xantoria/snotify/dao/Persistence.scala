@@ -64,15 +64,15 @@ trait Persistence extends StrictLogging {
     saved onComplete {
       case Success(Inserted) | Success(Updated) => {
         logger.info(s"Successfully wrote $rn")
-        rn.ack()
+        rn.stored()
       }
       case Success(Ignored) => {
         logger.info(s"Acknowledged $rn but did not overwrite existing notification")
-        rn.ack()
+        rn.ignored()
       }
       case Failure(NonFatal(t)) => {
         logger.error(s"Unexpected error persisting $rn", t)
-        rn.retry()
+        rn.error(t)
       }
     }
 

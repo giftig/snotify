@@ -18,4 +18,6 @@ case class AMQPNotification(
     logger.warn(s"Requeued $this")
     message.nack(requeue = true)
   }
+
+  override def error(t: Throwable): Unit = retry()
 }
