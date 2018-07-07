@@ -12,6 +12,7 @@ import org.scalatest.time._
 
 import com.xantoria.snotify.{SpecKit, StreamTesting}
 import com.xantoria.snotify.model._
+import com.xantoria.snotify.targeting.TargetResolver
 
 import TestNotification._
 
@@ -78,6 +79,10 @@ object ClusterHandlingSpec {
     notifications: Seq[TestNotification],
     probe: TestNotificationWriter
   ): ClusterHandling[TestNotification] = {
-    new ClusterHandler(new TestNotificationSource(notifications), probe, SelfTarget, Peers)
+    new ClusterHandler(
+      new TestNotificationSource(notifications),
+      probe,
+      new IncomingTargetResolver[TestNotification](new TargetResolver(Set(SelfTarget), Peers))
+    )
   }
 }

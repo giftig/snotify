@@ -1,10 +1,12 @@
 package com.xantoria.snotify.config
 
 import scala.concurrent.duration._
+import scala.collection.JavaConverters._
 
 import com.typesafe.config.{Config => TConfig}
 
 import com.xantoria.snotify.backoff._
+import com.xantoria.snotify.targeting.TargetGroup
 
 object ConfigHelpers {
   implicit class PimpedConfig(c: TConfig) {
@@ -20,6 +22,13 @@ object ConfigHelpers {
         case "never-retry" => NeverRetryStrategy
         case _ => throw new IllegalArgumentException("Invalid backoff strategy type")
       }
+    }
+
+    def toTargetGroup: TargetGroup = {
+      val name = c.getString("name")
+      val members = c.getStringList("members").asScala.toSet
+
+      TargetGroup(name, members)
     }
   }
 }

@@ -7,6 +7,7 @@ import com.typesafe.config.{Config => TConfig, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.backoff.BackoffStrategy
+import com.xantoria.snotify.targeting.TargetGroup
 
 object Config extends StrictLogging {
   import ConfigHelpers._
@@ -24,8 +25,12 @@ object Config extends StrictLogging {
   private val persist: TConfig = cfg.getConfig("persist")
   private val rest: TConfig = cfg.getConfig("rest")
 
+  // Clustering / target resolution config
   val clientId = cfg.getString("client-id")
   val peerIds: Set[String] = cfg.getStringList("cluster.peers").asScala.toSet
+  val targetGroups: Set[TargetGroup] = cfg.getConfigList("cluster.groups").asScala.toSet map {
+    c: TConfig => c.toTargetGroup
+  }
 
   val amqInterface: String = {
     val protocol = amq.getString("protocol")

@@ -29,12 +29,10 @@ import com.xantoria.snotify.model.{Notification, ReceivedNotification}
  * for possible redirection throughout the cluster - in practice that should mean anything that
  * hasn't been delivered to the personal queue, or otherwise marked as being for this node only.
  */
-trait ClusterHandling[T <: ReceivedNotification]
-  extends IncomingTargetResolution[T] // TODO: Consider composing instead?
-  with StrictLogging {
-
+trait ClusterHandling[T <: ReceivedNotification] extends StrictLogging {
   protected val notificationSource: NotificationSource[T]
   protected val notificationWriter: NotificationWriting
+  protected val targetResolver: IncomingTargetResolution[T]
 
   private val errorSink: Sink[T, _] = Sink.foreach {
     n: T => logger.error(s"$n contained an unidentified target")
@@ -48,7 +46,7 @@ trait ClusterHandling[T <: ReceivedNotification]
       import GraphDSL.Implicits._
 
       val merger = b.add(Merge[T](2))
-      val resolver = b.add(targetResolverShape)
+      val resolver = b.add(targetResolver.resolverShape)
       val src = notificationSource.source()
       val unwrapNotification = Flow[T].map { _.notification }
 

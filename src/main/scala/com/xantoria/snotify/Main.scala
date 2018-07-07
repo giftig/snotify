@@ -20,6 +20,7 @@ import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.queue.{AMQPConnectionMgmt, AMQPReader, AMQPWriter}
 import com.xantoria.snotify.rest.{Service => RestService}
 import com.xantoria.snotify.streaming.{App => StreamingApp, _}
+import com.xantoria.snotify.targeting.TargetResolver
 
 object Main extends StrictLogging {
   private lazy val notificationDao: Persistence = {
@@ -52,8 +53,11 @@ object Main extends StrictLogging {
     new ClusterHandler(
       new NotificationSourceMerger(clusterQueue +: NotificationSource.configuredReaders),
       new NotificationSinkMerger(outputQueues),
-      Config.clientId,
-      Config.peerIds.toSet
+      new IncomingTargetResolver[ReceivedNotification](TargetResolver(
+        Config.clientId,
+        Config.peerIds,
+        Config.targetGroups
+      ))
     )
   }
 

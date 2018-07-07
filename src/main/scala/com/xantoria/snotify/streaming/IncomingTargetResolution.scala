@@ -10,7 +10,9 @@ import com.xantoria.snotify.targeting.TargetResolution
 /**
  * Defines graph shape(s) for dealing with targets in incoming messages
  */
-trait IncomingTargetResolution[T <: ReceivedNotification] extends TargetResolution {
+trait IncomingTargetResolution[T <: ReceivedNotification] {
+  protected val resolver: TargetResolution
+
   /**
    * A graph junction which directs incoming messages to one or more of three outputs
    *
@@ -22,15 +24,15 @@ trait IncomingTargetResolution[T <: ReceivedNotification] extends TargetResoluti
    * notification ~> resolver ~~~ peer ~~~> NotificationWriter ~> AMQP
    *                          ~~~ unk  ~~~> (ignored)
    */
-  protected val targetResolverShape: Graph[UniformFanOutShape[T, T], NotUsed] = {
+  val resolverShape: Graph[UniformFanOutShape[T, T], NotUsed] = {
     GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
       val input = b.add(Flow[T])
       val bcast = b.add(Broadcast[T](outputPorts = 3))
 
-      val forSelf = b.add(Flow[T].filter { n => isSelf(n.notification) })
-      val forPeer = b.add(Flow[T].filter { n => isPeer(n.notification) })
-      val unk = b.add(Flow[T].filter { n => isUnknown(n.notification) })
+      val forSelf = b.add(Flow[T].filter { n => resolver.isSelf(n.notification) })
+      val forPeer = b.add(Flow[T].filter { n => resolver.isPeer(n.notification) })
+      val unk = b.add(Flow[T].filter { n => resolver.isUnknown(n.notification) })
 
       input ~> bcast
       bcast ~> forSelf
