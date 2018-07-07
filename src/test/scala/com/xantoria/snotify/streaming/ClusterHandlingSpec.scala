@@ -49,19 +49,47 @@ class ClusterHandlingSpec
     val probe = new TestNotificationWriter
 
     val h = ClusterHandlingSpec.createHandler(Seq(n), probe)
-    val (actorRefHook: ActorRef, done: Future[Done]) = h.source.toMat(Sink.ignore)(Keep.both).run()
+    val (actorRefHook, results) = h.source.toMat(Sink.seq)(Keep.both).run()
 
-    // TODO: Status.Success should work :( See akka/akka #25285
-    actorRefHook ! Status.Failure(new RuntimeException())
-    a[RuntimeException] shouldBe thrownBy { done.futureValue }
+    // FIXME: Workaround for akka race bug :( See akka/akka #25285
+    Thread.sleep(500)
 
+    actorRefHook ! Status.Success("ok")
+
+    results.futureValue should have length 0
     probe.notifications.head should be(n.notification)
   }
 
   it should "discard notifications which correspond to unknown targets" in {
+    val n = TestNotification(targets = Seq("hodorhodorhodor"))
+    val probe = new TestNotificationWriter
+
+    val h = ClusterHandlingSpec.createHandler(Seq(n), probe)
+    val (actorRefHook, results) = h.source.toMat(Sink.seq)(Keep.both).run()
+
+    // FIXME: Workaround for akka race bug :( See akka/akka #25285
+    Thread.sleep(500)
+
+    actorRefHook ! Status.Success("ok")
+
+    probe.notifications should have length 0
+    results.futureValue should have length 0
   }
 
-  it should "work with a mixed bag of notifications" in {
+  it should "pass a notification to both self and peer if appropriate" in {
+    val n = TestNotification(targets = Seq(SelfTarget, Peers.head))
+    val probe = new TestNotificationWriter
+
+    val h = ClusterHandlingSpec.createHandler(Seq(n), probe)
+    val (actorRefHook, results) = h.source.toMat(Sink.seq)(Keep.both).run()
+
+    // FIXME: Workaround for akka race bug :( See akka/akka #25285
+    Thread.sleep(500)
+
+    actorRefHook ! Status.Success("ok")
+
+    results.futureValue should be(Seq(n))
+    probe.notifications.head should be(n.notification)
   }
 }
 
