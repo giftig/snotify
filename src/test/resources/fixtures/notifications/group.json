@@ -1,7 +1,7 @@
 {
-  "title": "Test Notification peer-only (only for dev2)",
+  "title": "Group notification (dev)",
   "body": "Hodor hodor hodor.",
   "trigger_time": "2018-01-01T00:00:00Z",
-  "targets": ["dev2"],
+  "targets": ["dev"],
   "source": "rest_api"
 }

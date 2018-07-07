@@ -20,7 +20,7 @@ import com.xantoria.snotify.model.ReceivedNotification
 import com.xantoria.snotify.queue.{AMQPConnectionMgmt, AMQPReader, AMQPWriter}
 import com.xantoria.snotify.rest.{Service => RestService}
 import com.xantoria.snotify.streaming.{App => StreamingApp, _}
-import com.xantoria.snotify.targeting.TargetResolver
+import com.xantoria.snotify.targeting.{TargetGroup, TargetResolver}
 
 object Main extends StrictLogging {
   private lazy val notificationDao: Persistence = {
@@ -42,7 +42,11 @@ object Main extends StrictLogging {
     val outputQueues = Config.peerQueues.toList map { case (pid, queueName) =>
       val q = Queue(queueName)
       val writer = new AMQPWriter(amqpConn, q)
-      new TargetedWriter(writer, Set(pid))
+      val names: Set[String] = Config.targetGroups.collect {
+        case TargetGroup(name, members) if members.contains(pid) => name
+      } + pid
+
+      new TargetedWriter(writer, names)
     }
     val clusterQueue = new AMQPReader(
       amqpConn,
