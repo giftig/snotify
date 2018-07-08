@@ -1,5 +1,6 @@
 package com.xantoria.snotify.alert
 
+import scala.collection.mutable.{Set => MutableSet}
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -23,6 +24,9 @@ trait AlertScheduling extends StrictLogging {
   protected val notificationDao: Persistence
   protected val backoffStrategy: BackoffStrategy
 
+  // A set of notification IDs currently scheduled to avoid duplicate scheduling
+  private val scheduledNotifications = MutableSet.empty[String]
+
   protected def triggerAlert(n: Notification, attempt: Int = 0): Future[Unit] = {
     logger.info {
       val attemptClause = if (attempt == 0) "" else s" (attempt #${attempt + 1})"
@@ -36,7 +40,10 @@ trait AlertScheduling extends StrictLogging {
     }
 
     result map {
-      case true => notificationDao.markComplete(n)
+      case true => {
+        notificationDao.markComplete(n)
+        scheduledNotifications.remove(n.id)
+      }
       case _ => {
         logger.warn(s"Notification ${n.id} was marked unacknowledged or delivery failed")
         if (!rescheduleNotification(n, attempt + 1)) {
@@ -48,11 +55,15 @@ trait AlertScheduling extends StrictLogging {
 
   protected def scheduleNotification(n: Notification): Unit = {
     if (isSoonEnough(n)) {
-      context.system.scheduler.scheduleOnce(
-        TimeUtils.timeUntil(n.triggerTime),
-        alertTarget,
-        TriggerAlert(n)
-      )
+      if (scheduledNotifications.add(n.id)) {
+        context.system.scheduler.scheduleOnce(
+          TimeUtils.timeUntil(n.triggerTime),
+          alertTarget,
+          TriggerAlert(n)
+        )
+      } else {
+        logger.debug(s"Notification ${n.id} already scheduled; skipping")
+      }
     } else {
       logger.info(s"Not scheduling delivery of notification ${n.id} yet; saving for later")
     }
