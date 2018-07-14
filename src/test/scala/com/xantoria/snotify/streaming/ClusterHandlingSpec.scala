@@ -51,9 +51,6 @@ class ClusterHandlingSpec
     val h = ClusterHandlingSpec.createHandler(Seq(n), probe)
     val (actorRefHook, results) = h.source.toMat(Sink.seq)(Keep.both).run()
 
-    // FIXME: Workaround for akka race bug :( See akka/akka #25285
-    Thread.sleep(500)
-
     actorRefHook ! Status.Success("ok")
 
     results.futureValue should have length 0
@@ -67,9 +64,6 @@ class ClusterHandlingSpec
     val h = ClusterHandlingSpec.createHandler(Seq(n), probe)
     val (actorRefHook, results) = h.source.toMat(Sink.seq)(Keep.both).run()
 
-    // FIXME: Workaround for akka race bug :( See akka/akka #25285
-    Thread.sleep(500)
-
     actorRefHook ! Status.Success("ok")
 
     probe.notifications should have length 0
@@ -82,9 +76,6 @@ class ClusterHandlingSpec
 
     val h = ClusterHandlingSpec.createHandler(Seq(n), probe)
     val (actorRefHook, results) = h.source.toMat(Sink.seq)(Keep.both).run()
-
-    // FIXME: Workaround for akka race bug :( See akka/akka #25285
-    Thread.sleep(500)
 
     actorRefHook ! Status.Success("ok")
 

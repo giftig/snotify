@@ -1,4 +1,4 @@
-val akkaCoreVersion = "2.5.13"
+val akkaCoreVersion = "2.5.14"
 val akkaHttpVersion = "10.1.3"
 
 val coreDeps = Seq(
