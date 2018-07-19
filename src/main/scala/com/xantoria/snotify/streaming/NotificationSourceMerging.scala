@@ -1,7 +1,5 @@
 package com.xantoria.snotify.streaming
 
-import scala.concurrent.duration._
-
 import akka.NotUsed
 import akka.stream.scaladsl._
 
@@ -20,13 +18,6 @@ trait NotificationSourceMerging extends NotificationSource[ReceivedNotification]
   }
 
   override def source(): Source[ReceivedNotification, NotUsed] = {
-    val merged = readers map { _.source() } reduce { _.merge(_) }
-
-    RestartSource.withBackoff(
-      minBackoff = 3.seconds,
-      maxBackoff = 15.seconds,
-      randomFactor = 0.2,
-      maxRestarts = 15
-    ) { () => merged }
+    readers map { _.source() } reduce { _.merge(_, eagerComplete = true) }
   }
 }

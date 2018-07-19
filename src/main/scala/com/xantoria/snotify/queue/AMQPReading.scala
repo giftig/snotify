@@ -1,5 +1,6 @@
 package com.xantoria.snotify.queue
 
+import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.NotUsed
@@ -28,7 +29,14 @@ trait AMQPReading extends NotificationSource[AMQPNotification]
       NamedQueueSourceSettings(amqpConnection, input.name, Seq(input)),
       bufferSize
     )
-    raw map {
+    val monitored = RestartSource.withBackoff(
+      minBackoff = 3.seconds,
+      maxBackoff = 15.seconds,
+      randomFactor = 0.2,
+      maxRestarts = 15
+    ) { () => raw }
+
+    monitored map {
       msg: CommittableIncomingMessage => {
         try {
           val encoding = Option(msg.message.properties.getContentEncoding) getOrElse "utf-8"
