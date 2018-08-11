@@ -1,0 +1,8 @@
+snotty/__init__.py
+snotty/send_message.py
+snotty.egg-info/PKG-INFO
+snotty.egg-info/SOURCES.txt
+snotty.egg-info/dependency_links.txt
+snotty.egg-info/entry_points.txt
+snotty.egg-info/requires.txt
+snotty.egg-info/top_level.txt
