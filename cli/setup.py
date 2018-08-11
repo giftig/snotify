@@ -15,7 +15,7 @@ def read_version():
 
             version = re.match('__version__ *= *[\'"]([^\'$]+)[\'"]$', l)
             if version:
-                return version.string
+                return version.group(1)
 
     raise Exception('Could not identify version')
 
@@ -29,5 +29,8 @@ setup(
             'snotty=snotty.send_message:main'
         ]
     },
+    url='https://www.github.com/giftig/snotify/',
+    maintainer='Rob Moore',
+    maintainer_email='giftiger.wunsch@xantoria.com',
     install_requires=['requests']
 )

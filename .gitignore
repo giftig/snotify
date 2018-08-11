@@ -9,3 +9,6 @@
 /project/target
 /lib_managed
 /project/project
+
+*.egg-info
+cli/dist
