@@ -34,8 +34,13 @@ class Snotty(object):
     def send_message(
         self, msg_id, title, body, priority, recipient, when=None
     ):
-        """Send a notification to gnotify with the given details"""
-        now = datetime.datetime.now()
+        """
+        Send a notification to gnotify with the given details
+
+        N.B. Snotify assumes all timestamps to be UTC, so a UTC datetime
+        must be provided.
+        """
+        now = datetime.datetime.utcnow()
         when = when or now
 
         data = {
