@@ -7,6 +7,7 @@ import akka.stream.Materializer
 
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.Notification
+import com.xantoria.snotify.alert.custom._
 import com.xantoria.snotify.alert.desktop._
 import com.xantoria.snotify.alert.pushover._
 
@@ -17,7 +18,8 @@ trait RootAlertHandling extends AlertHandling {
   private lazy val handlers: Seq[AlertHandling] = Seq(
     audioHandler,
     notifySendHandler,
-    pushoverHandler
+    pushoverHandler,
+    customHandler
   ).flatten
 
   // TODO: DRY
@@ -35,6 +37,10 @@ trait RootAlertHandling extends AlertHandling {
 
   private lazy val pushoverHandler: Option[PushoverAlert] = {
     if (Config.alertingConfig.getBoolean("pushover.enabled")) Some(new PushoverAlert) else None
+  }
+
+  private lazy val customHandler: Option[CustomAlert] = {
+    if (Config.alertingConfig.getBoolean("custom.enabled")) Some(new CustomAlert) else None
   }
 
   override def triggerAlert(n: Notification)(implicit ec: ExecutionContext): Future[Boolean] = {
