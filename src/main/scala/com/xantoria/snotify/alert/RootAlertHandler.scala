@@ -4,6 +4,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.config.Config
 import com.xantoria.snotify.model.Notification
@@ -15,7 +16,7 @@ trait RootAlertHandling extends AlertHandling {
   protected implicit val actorSystem: ActorSystem
   protected implicit val mat: Materializer
 
-  private lazy val handlers: Seq[AlertHandling] = Seq(
+  protected lazy val handlers: Seq[AlertHandling] = Seq(
     audioHandler,
     notifySendHandler,
     pushoverHandler,
@@ -52,4 +53,8 @@ trait RootAlertHandling extends AlertHandling {
 class RootAlertHandler(
   override implicit protected val actorSystem: ActorSystem,
   override implicit protected val mat: Materializer
-) extends RootAlertHandling
+) extends RootAlertHandling with StrictLogging {
+  logger.info(
+    s"Registered handlers: [${handlers.map { _.getClass.getSimpleName }.mkString(", ")}]"
+  )
+}
