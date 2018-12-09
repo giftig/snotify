@@ -5,10 +5,6 @@ import akka.http.scaladsl.Http
 import akka.stream.Materializer
 import com.typesafe.scalalogging.StrictLogging
 
-import com.xantoria.snotify.dao.StreamingPersistence
-import com.xantoria.snotify.model.ReceivedNotification
-
-
 class Service(host: String, port: Int, override protected val notificationSink: ActorRef)(
   protected implicit val actorSystem: ActorSystem,
   override protected implicit val materializer: Materializer

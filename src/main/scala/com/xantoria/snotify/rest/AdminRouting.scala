@@ -1,6 +1,5 @@
 package com.xantoria.snotify.rest
 
-import akka.http.scaladsl._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server._
 

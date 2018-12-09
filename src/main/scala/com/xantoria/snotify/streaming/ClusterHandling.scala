@@ -1,12 +1,11 @@
 package com.xantoria.snotify.streaming
 
-import akka.NotUsed
 import akka.actor.ActorRef
 import akka.stream._
 import akka.stream.scaladsl._
 import com.typesafe.scalalogging.StrictLogging
 
-import com.xantoria.snotify.model.{Notification, ReceivedNotification}
+import com.xantoria.snotify.model.ReceivedNotification
 
 /**
  * Represents handling cluster mechanics by reading and writing to relevant queues

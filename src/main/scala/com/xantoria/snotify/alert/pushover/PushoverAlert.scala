@@ -1,7 +1,6 @@
 package com.xantoria.snotify.alert.pushover
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 import akka.actor.ActorSystem

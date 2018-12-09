@@ -2,21 +2,15 @@ package com.xantoria.snotify.streaming
 
 import scala.concurrent.Future
 
-import akka.Done
 import akka.actor._
-import akka.stream._
 import akka.stream.scaladsl._
 import akka.testkit.TestKit
-import org.scalatest.concurrent._
 import org.scalatest.time._
 
 import com.xantoria.snotify.{SpecKit, StreamTesting}
-import com.xantoria.snotify.model._
 import com.xantoria.snotify.targeting.TargetResolver
 
 import TestNotification._
-
-import com.typesafe.config.ConfigFactory
 
 class ClusterHandlingSpec
   extends TestKit(ActorSystem("ClusterHandlingSpec"))

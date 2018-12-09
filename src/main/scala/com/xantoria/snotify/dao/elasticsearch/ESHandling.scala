@@ -38,7 +38,7 @@ trait ESHandling extends Persistence with StrictLogging {
   override def save(n: Notification)(implicit ec: ExecutionContext): Future[WriteResult] = {
     val q = indexInto(indexName / NotificationType).createOnly(true).doc(n).id(n.id)
     client.execute(q) map {
-      case Right(res) => Inserted
+      case Right(_) => Inserted
       case Left(f) if f.error.`type` == VersionConflict => Ignored
       case Left(f) => throw new ElasticsearchException(f)
     }

@@ -1,8 +1,6 @@
 package com.xantoria.snotify.rest
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
-
-import akka.actor.{ActorRef, ActorSystem}
+import scala.concurrent.{Future, Promise}
 
 import com.xantoria.snotify.model.{Notification, ReceivedNotification}
 

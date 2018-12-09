@@ -20,7 +20,7 @@ object JsonProtocol extends DefaultJsonProtocol {
   private def requireString(
     v: JsValue,
     errorDesc: String,
-    maxLength: Option[Int] = None
+    maxLength: Option[Int]
   ): String = {
     v match {
       case JsString(s) => {

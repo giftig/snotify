@@ -37,7 +37,14 @@ val root = (project in file(".")).settings(
   mainClass in Compile := Some("com.xantoria.snotify.Main"),
   libraryDependencies ++= allDeps,
   retrieveManaged := true,
-  scalacOptions := Seq("-unchecked", "-deprecation"),
+  scalacOptions := Seq(
+    "-unchecked",
+    "-deprecation",
+    "-Ywarn-unused:implicits",
+    "-Ywarn-unused:imports",
+    "-Ywarn-unused:patvars",
+    "-Ywarn-unused:privates"
+  ),
   testOptions += Tests.Setup { cl =>
     // Workaround to avoid slf4j complaining about multi-threading during initialisation
     // Gets a root logger at the start of test runs to force it to finish initialising first

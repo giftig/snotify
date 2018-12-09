@@ -4,7 +4,6 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.stream._
 import akka.stream.scaladsl._
 import akka.stream.alpakka.amqp._
 import akka.stream.alpakka.amqp.scaladsl._

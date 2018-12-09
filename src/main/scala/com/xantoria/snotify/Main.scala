@@ -2,14 +2,10 @@ package com.xantoria.snotify
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
-import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.alpakka.amqp.{QueueDeclaration => Queue}
-import akka.stream.alpakka.amqp.scaladsl.CommittableIncomingMessage
-import akka.stream.scaladsl.Sink
 import com.typesafe.config.{Config => TConfig}
 import com.typesafe.scalalogging.StrictLogging
 

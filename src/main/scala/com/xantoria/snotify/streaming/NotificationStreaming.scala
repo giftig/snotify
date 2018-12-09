@@ -1,6 +1,6 @@
 package com.xantoria.snotify.streaming
 
-import akka.{Done, NotUsed}
+import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl._

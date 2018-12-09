@@ -1,6 +1,6 @@
 package com.xantoria.snotify.utils
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 
 import com.xantoria.snotify.SpecKit
 

@@ -3,7 +3,7 @@ package com.xantoria.snotify.streaming
 import akka.NotUsed
 import akka.stream.scaladsl._
 
-import com.xantoria.snotify.model.{Notification, ReceivedNotification}
+import com.xantoria.snotify.model.ReceivedNotification
 
 /**
  * Read notifications from several stream sources provided via other NotificationSource instances

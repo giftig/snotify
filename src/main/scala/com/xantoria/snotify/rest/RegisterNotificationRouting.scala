@@ -4,14 +4,12 @@ import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 import akka.actor.ActorRef
-import akka.http.scaladsl._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server._
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Source, Sink}
 import com.typesafe.scalalogging.StrictLogging
 
-import com.xantoria.snotify.model.{Notification, ReceivedNotification}
+import com.xantoria.snotify.model.Notification
 import com.xantoria.snotify.serialisation.JsonProtocol._
 
 import Directives._

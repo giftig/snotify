@@ -2,7 +2,6 @@ package com.xantoria.snotify.alert.desktop
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import com.typesafe.config.{Config => TypesafeConfig}
 import com.typesafe.scalalogging.StrictLogging
 
 import com.xantoria.snotify.alert.AlertHandling

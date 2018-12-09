@@ -80,7 +80,7 @@ trait Persistence extends StrictLogging {
       case Inserted => Some(rn.notification)
       case _ => None
     } recover {
-      case NonFatal(t) => None
+      case NonFatal(_) => None
     }
   }
 }

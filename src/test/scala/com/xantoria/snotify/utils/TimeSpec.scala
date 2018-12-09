@@ -3,7 +3,6 @@ package com.xantoria.snotify.utils
 import scala.concurrent.duration._
 
 import org.joda.time.DateTime
-import org.scalatest._
 import org.scalatest.matchers._
 
 import com.xantoria.snotify.SpecKit
