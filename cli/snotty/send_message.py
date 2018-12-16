@@ -121,7 +121,7 @@ def main():
     parser.add_argument('-i', '--id', dest='id', default=str(uuid.uuid4()))
     parser.add_argument('-t', '--title', dest='title', required=True)
     parser.add_argument(
-        '-p', '--priority', dest='priority', type=int, default=5
+        '-p', '--priority', dest='priority', type=int, default=50
     )
     parser.add_argument(
         '-r', '--recipient', dest='recipient',

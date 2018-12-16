@@ -31,7 +31,7 @@ object PushoverMessage {
     Priority.Medium -> -1,
     Priority.High -> 0,
     Priority.Critical -> 1,
-    Priority.Max -> -2
+    Priority.Max -> 2
   ))
 
   def apply(n: Notification, token: String, user: String): PushoverMessage = {
