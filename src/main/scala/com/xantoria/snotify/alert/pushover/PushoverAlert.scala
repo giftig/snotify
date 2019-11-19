@@ -48,6 +48,7 @@ class PushoverAlert(
         true
       case r =>
         logger.error(s"Got HTTP ${r.status.intValue} from Pushover")
+        logger.debug(s"Full request: $req; response: $r")
         false
     } recover {
       case NonFatal(e) =>
