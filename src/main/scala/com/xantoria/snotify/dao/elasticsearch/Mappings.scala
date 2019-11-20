@@ -1,9 +1,9 @@
 package com.xantoria.snotify.dao.elasticsearch
 
-import com.sksamuel.elastic4s.http.ElasticDsl._
+import com.sksamuel.elastic4s.ElasticDsl._
 
 object Mappings {
-  val Notification = mapping("notification").as(
+  val Notification = properties(
     keywordField("id"),
     textField("body"),
     textField("title"),

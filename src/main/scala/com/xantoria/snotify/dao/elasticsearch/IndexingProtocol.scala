@@ -1,7 +1,6 @@
 package com.xantoria.snotify.dao.elasticsearch
 
-import scala.util.{Left, Right}
-import scala.util.control.NonFatal
+import scala.util.Try
 
 import com.sksamuel.elastic4s.{Hit, HitReader, Indexable}
 import spray.json._
@@ -15,12 +14,8 @@ trait IndexingProtocol {
   }
 
   implicit object NotificationReader extends HitReader[Notification] {
-    override def read(h: Hit): Either[Throwable, Notification] = {
-      try {
-        Right(h.sourceAsString.parseJson.convertTo[Notification])
-      } catch {
-        case NonFatal(t) => Left(t)
-      }
+    override def read(h: Hit): Try[Notification] = Try {
+      h.sourceAsString.parseJson.convertTo[Notification]
     }
   }
 }

@@ -16,8 +16,9 @@ val coreDeps = Seq(
 )
 
 val elasticsearchDeps = Seq(
-  "com.sksamuel.elastic4s" %% "elastic4s-core" % "6.2.9",
-  "com.sksamuel.elastic4s" %% "elastic4s-http" % "6.2.9"
+  "com.sksamuel.elastic4s" %% "elastic4s-core" % "7.3.0",
+  "com.sksamuel.elastic4s" %% "elastic4s-client-akka" % "7.3.0"
+
 )
 
 val testDeps = Seq(

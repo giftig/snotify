@@ -19,10 +19,10 @@ import com.xantoria.snotify.streaming.{App => StreamingApp, _}
 import com.xantoria.snotify.targeting.{TargetGroup, TargetResolver}
 
 object Main extends StrictLogging {
-  private lazy val notificationDao: Persistence = {
-    val constructor = Config.persistHandler.getConstructor(classOf[TConfig])
+  private def notificationDao(implicit system: ActorSystem): Persistence = {
+    val constructor = Config.persistHandler.getConstructor(classOf[TConfig], classOf[ActorSystem])
 
-    constructor.newInstance(Config.persistConfig) match {
+    constructor.newInstance(Config.persistConfig, system) match {
       case p: Persistence => p
       case _ => throw new IllegalArgumentException(
         s"Bad persistence class ${Config.persistHandler.getName}"
