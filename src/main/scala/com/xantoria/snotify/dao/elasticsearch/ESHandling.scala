@@ -76,15 +76,20 @@ trait ESHandling extends Persistence with StrictLogging {
   /**
    * Mark the specified notification as undeliverable
    */
-  override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = ???
+  override def markFailed(n: Notification)(implicit ec: ExecutionContext): Future[Unit] = {
+    val q = updateById(indexName, n.id).script(MarkUndeliverableScript)
+
+    mapResponse(client.execute(q)) { _ => () }
+  }
 }
 
 object ESHandling {
-  val IndexAlreadyExistsException: String = "resource_already_exists_exception"
+  val ResourceAlreadyExistsException: String = "resource_already_exists_exception"
   val VersionConflict: String = "version_conflict_engine_exception"
 
   // Script used with the update API to mark a notification complete
   val MarkCompleteScript = "ctx._source.complete = true"
+  val MarkUndeliverableScript = "ctx._source.undeliverable = true"
 
   class ElasticsearchException(f: RequestFailure) extends RuntimeException(
     s"Elasticsearch request failed: ${f.error}"

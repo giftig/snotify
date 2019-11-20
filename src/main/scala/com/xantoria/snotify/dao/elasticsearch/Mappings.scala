@@ -12,6 +12,7 @@ object Mappings {
     dateField("creation_time"),
     keywordField("source"),
     intField("priority"),
-    booleanField("complete")
+    booleanField("complete"),
+    booleanField("undeliverable")
   )
 }
