@@ -165,9 +165,9 @@ def main():
             when=_clean_time(args.time)
         )
     except Exception:
-        print '\x1b[1;31m'
+        print('\x1b[1;31m')
         traceback.print_exc()
-        print '\x1b[0m'
+        print('\x1b[0m')
         sys.exit(1)
 
 
