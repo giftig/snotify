@@ -17,7 +17,7 @@ trait StreamingPersistence {
   protected val refreshInterval: Option[FiniteDuration]
 
   /**
-   * A source of notifications which have been previous persisted and are still pending
+   * A source of notifications which have been previously persisted and are still pending
    */
   def persistedSource: Source[Notification, NotUsed] = {
     Source
